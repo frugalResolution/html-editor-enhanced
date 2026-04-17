@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:html_editor_enhanced/utils/i18n.dart';
 
 /// Abstract class that all the toolbar classes extend
 abstract class Toolbar {
@@ -47,20 +48,32 @@ class FontButtons extends Toolbar {
     this.subscript = true,
   });
 
-  List<Icon> getIcons1() {
+  List<Icon> getIcons1(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (bold) icons.add(Icon(Icons.format_bold));
-    if (italic) icons.add(Icon(Icons.format_italic));
-    if (underline) icons.add(Icon(Icons.format_underline));
-    if (clearAll) icons.add(Icon(Icons.format_clear));
+    if (bold) icons.add(Icon(Icons.format_bold, semanticLabel: i18n.bold));
+    if (italic)
+      icons.add(Icon(Icons.format_italic, semanticLabel: i18n.italic));
+    if (underline) {
+      icons.add(Icon(Icons.format_underline, semanticLabel: i18n.underline));
+    }
+    if (clearAll) {
+      icons.add(Icon(Icons.format_clear, semanticLabel: i18n.clearFormatting));
+    }
     return icons;
   }
 
-  List<Icon> getIcons2() {
+  List<Icon> getIcons2(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (strikethrough) icons.add(Icon(Icons.format_strikethrough));
-    if (superscript) icons.add(Icon(Icons.superscript));
-    if (subscript) icons.add(Icon(Icons.subscript));
+    if (strikethrough) {
+      icons.add(
+          Icon(Icons.format_strikethrough, semanticLabel: i18n.strikethrough));
+    }
+    if (superscript) {
+      icons.add(Icon(Icons.superscript, semanticLabel: i18n.superscript));
+    }
+    if (subscript) {
+      icons.add(Icon(Icons.subscript, semanticLabel: i18n.subscript));
+    }
     return icons;
   }
 }
@@ -75,10 +88,15 @@ class ColorButtons extends Toolbar {
     this.highlightColor = true,
   });
 
-  List<Icon> getIcons() {
+  List<Icon> getIcons(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (foregroundColor) icons.add(Icon(Icons.format_color_text));
-    if (highlightColor) icons.add(Icon(Icons.format_color_fill));
+    if (foregroundColor) {
+      icons.add(Icon(Icons.format_color_text, semanticLabel: i18n.fontColor));
+    }
+    if (highlightColor) {
+      icons.add(
+          Icon(Icons.format_color_fill, semanticLabel: i18n.highlightColor));
+    }
     return icons;
   }
 }
@@ -95,10 +113,16 @@ class ListButtons extends Toolbar {
     this.listStyles = true,
   });
 
-  List<Icon> getIcons() {
+  List<Icon> getIcons(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (ul) icons.add(Icon(Icons.format_list_bulleted));
-    if (ol) icons.add(Icon(Icons.format_list_numbered));
+    if (ul) {
+      icons.add(
+          Icon(Icons.format_list_bulleted, semanticLabel: i18n.unorderedList));
+    }
+    if (ol) {
+      icons.add(
+          Icon(Icons.format_list_numbered, semanticLabel: i18n.orderedList));
+    }
     return icons;
   }
 }
@@ -127,19 +151,35 @@ class ParagraphButtons extends Toolbar {
     this.caseConverter = true,
   });
 
-  List<Icon> getIcons1() {
+  List<Icon> getIcons1(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (alignLeft) icons.add(Icon(Icons.format_align_left));
-    if (alignCenter) icons.add(Icon(Icons.format_align_center));
-    if (alignRight) icons.add(Icon(Icons.format_align_right));
-    if (alignJustify) icons.add(Icon(Icons.format_align_justify));
+    if (alignLeft) {
+      icons.add(Icon(Icons.format_align_left, semanticLabel: i18n.alignLeft));
+    }
+    if (alignCenter) {
+      icons.add(
+          Icon(Icons.format_align_center, semanticLabel: i18n.alignCenter));
+    }
+    if (alignRight) {
+      icons.add(Icon(Icons.format_align_right, semanticLabel: i18n.alignRight));
+    }
+    if (alignJustify) {
+      icons.add(
+          Icon(Icons.format_align_justify, semanticLabel: i18n.alignJustify));
+    }
     return icons;
   }
 
-  List<Icon> getIcons2() {
+  List<Icon> getIcons2(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (increaseIndent) icons.add(Icon(Icons.format_indent_increase));
-    if (decreaseIndent) icons.add(Icon(Icons.format_indent_decrease));
+    if (increaseIndent) {
+      icons.add(Icon(Icons.format_indent_increase,
+          semanticLabel: i18n.increaseIndent));
+    }
+    if (decreaseIndent) {
+      icons.add(Icon(Icons.format_indent_decrease,
+          semanticLabel: i18n.decreaseIndent));
+    }
     return icons;
   }
 }
@@ -164,15 +204,30 @@ class InsertButtons extends Toolbar {
     this.hr = true,
   });
 
-  List<Icon> getIcons() {
+  List<Icon> getIcons(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (link) icons.add(Icon(Icons.link));
-    if (picture) icons.add(Icon(Icons.image_outlined));
-    if (audio) icons.add(Icon(Icons.audiotrack_outlined));
-    if (video) icons.add(Icon(Icons.videocam_outlined));
-    if (otherFile) icons.add(Icon(Icons.attach_file));
-    if (table) icons.add(Icon(Icons.table_chart_outlined));
-    if (hr) icons.add(Icon(Icons.horizontal_rule));
+    if (link) icons.add(Icon(Icons.link, semanticLabel: i18n.insertLink));
+    if (picture) {
+      icons.add(Icon(Icons.image_outlined, semanticLabel: i18n.insertImage));
+    }
+    if (audio) {
+      icons.add(
+          Icon(Icons.audiotrack_outlined, semanticLabel: i18n.insertAudio));
+    }
+    if (video) {
+      icons.add(Icon(Icons.videocam_outlined, semanticLabel: i18n.insertVideo));
+    }
+    if (otherFile) {
+      icons.add(Icon(Icons.attach_file, semanticLabel: i18n.insertFile));
+    }
+    if (table) {
+      icons.add(
+          Icon(Icons.table_chart_outlined, semanticLabel: i18n.insertTable));
+    }
+    if (hr) {
+      icons.add(Icon(Icons.horizontal_rule,
+          semanticLabel: i18n.insertHorizontalRule));
+    }
     return icons;
   }
 }
@@ -197,20 +252,22 @@ class OtherButtons extends Toolbar {
     this.paste = true,
   });
 
-  List<Icon> getIcons1() {
+  List<Icon> getIcons1(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (fullscreen) icons.add(Icon(Icons.fullscreen));
-    if (codeview) icons.add(Icon(Icons.code));
-    if (undo) icons.add(Icon(Icons.undo));
-    if (redo) icons.add(Icon(Icons.redo));
-    if (help) icons.add(Icon(Icons.help_outline));
+    if (fullscreen) {
+      icons.add(Icon(Icons.fullscreen, semanticLabel: i18n.fullscreen));
+    }
+    if (codeview) icons.add(Icon(Icons.code, semanticLabel: i18n.codeview));
+    if (undo) icons.add(Icon(Icons.undo, semanticLabel: i18n.undo));
+    if (redo) icons.add(Icon(Icons.redo, semanticLabel: i18n.redo));
+    if (help) icons.add(Icon(Icons.help_outline, semanticLabel: i18n.help));
     return icons;
   }
 
-  List<Icon> getIcons2() {
+  List<Icon> getIcons2(HtmlToolbarI18n i18n) {
     var icons = <Icon>[];
-    if (copy) icons.add(Icon(Icons.copy));
-    if (paste) icons.add(Icon(Icons.paste));
+    if (copy) icons.add(Icon(Icons.copy, semanticLabel: i18n.copy));
+    if (paste) icons.add(Icon(Icons.paste, semanticLabel: i18n.paste));
     return icons;
   }
 }

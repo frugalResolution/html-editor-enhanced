@@ -171,4 +171,6 @@ class HtmlEditorController {
   /// Internal function to insert table on Web
   @internal
   void insertTable(String dimensions) {}
+
+  void toggleFullScreen() {}
 }

@@ -100,6 +100,7 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      excludeFromSemantics: true,
       onTap: () {
         SystemChannels.textInput.invokeMethod('TextInput.hide');
       },
@@ -147,8 +148,8 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
                     javaScriptEnabled: true,
                     transparentBackground: true,
                     useShouldOverrideUrlLoading: true,
-                    useHybridComposition: widget.htmlEditorOptions
-                        .androidUseHybridComposition,
+                    useHybridComposition:
+                        widget.htmlEditorOptions.androidUseHybridComposition,
                     loadWithOverviewMode: true,
                   ),
                   initialUserScripts:
@@ -213,7 +214,9 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
                         });
                         await setHeightJS();
                       }
-                      var visibleDecimal = await visibleStream.stream.firstWhere((_) => !visibleStream.isClosed, orElse: () => 0);
+                      var visibleDecimal = await visibleStream.stream
+                          .firstWhere((_) => !visibleStream.isClosed,
+                              orElse: () => 0);
                       var newHeight = widget.otherOptions.height;
                       if (visibleDecimal > 0.1) {
                         this.setState(() {
@@ -230,6 +233,14 @@ class _HtmlEditorWidgetMobileState extends State<HtmlEditorWidget> {
                     var maximumFileSize = 10485760;
                     if (url.contains(filePath)) {
                       var summernoteToolbar = '[\n';
+
+                      // Add screenReader language support.
+                      if (widget.htmlEditorOptions.lang != null) {
+                        controller.evaluateJavascript(
+                            source:
+                                "document.documentElement.lang = '${widget.htmlEditorOptions.lang}';");
+                      }
+
                       var summernoteCallbacks = '''callbacks: {
                           onKeydown: function(e) {
                               var chars = \$(".note-editable").text();

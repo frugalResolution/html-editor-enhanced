@@ -1,7 +1,34 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:html_editor_enhanced/utils/i18n.dart';
+
+class ExampleI18n {
+  static const Map<String, String> de = {
+    'title': 'Flutter HTML Editor Beispiel',
+    'refresh': 'Aktualisieren',
+    'toggleCodeView': 'Code-Ansicht umschalten',
+    'hint': 'Dein Text hier...',
+    'undo': 'Rückgängig',
+    'reset': 'Zurücksetzen',
+    'submit': 'Absenden',
+    'redo': 'Wiederholen',
+    'disable': 'Deaktivieren',
+    'enable': 'Aktivieren',
+    'insertText': 'Text einfügen',
+    'insertHtml': 'HTML einfügen',
+    'insertLink': 'Link einfügen',
+    'insertNetworkImage': 'Netzwerkbild einfügen',
+    'info': 'Info',
+    'warning': 'Warnung',
+    'success': 'Erfolg',
+    'danger': 'Gefahr',
+    'plaintext': 'Klartext',
+    'remove': 'Entfernen',
+  };
+}
 
 void main() => runApp(HtmlEditorExampleApp());
 
@@ -13,7 +40,17 @@ class HtmlEditorExampleApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(),
       darkTheme: ThemeData.dark(),
-      home: HtmlEditorExample(title: 'Flutter HTML Editor Example'),
+      locale: const Locale('de', 'DE'),
+      supportedLocales: const [
+        Locale('de', 'DE'),
+        Locale('en', 'US'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: HtmlEditorExample(title: ExampleI18n.de['title']!),
     );
   }
 }
@@ -45,22 +82,30 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
           elevation: 0,
           actions: [
             IconButton(
-                icon: Icon(Icons.refresh),
-                onPressed: () {
-                  if (kIsWeb) {
-                    controller.reloadWeb();
-                  } else {
-                    controller.editorController!.reload();
-                  }
-                })
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                if (kIsWeb) {
+                  controller.reloadWeb();
+                } else {
+                  controller.editorController!.reload();
+                }
+              },
+              tooltip: ExampleI18n.de['refresh'],
+            )
           ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             controller.toggleCodeView();
           },
-          child: Text(r'<\>',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          child: Semantics(
+            excludeSemantics: true,
+            child: Text(
+              r'<\>',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
+          tooltip: ExampleI18n.de['toggleCodeView'],
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -69,13 +114,14 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               HtmlEditor(
                 controller: controller,
                 htmlEditorOptions: HtmlEditorOptions(
-                  hint: 'Your text here...',
+                  hint: ExampleI18n.de['hint'],
                   shouldEnsureVisible: true,
                   //initialText: "<p>text content initial, if any</p>",
                 ),
                 htmlToolbarOptions: HtmlToolbarOptions(
                   toolbarPosition: ToolbarPosition.aboveEditor, //by default
                   toolbarType: ToolbarType.nativeScrollable, //by default
+                  i18n: HtmlToolbarI18n.de,
                   onButtonPressed:
                       (ButtonType type, bool? status, Function? updateStatus) {
                     print(
@@ -84,8 +130,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   },
                   onDropdownChanged: (DropdownType type, dynamic changed,
                       Function(dynamic)? updateSelectedItem) {
-                    print(
-                        "dropdown '${type.name}' changed to $changed");
+                    print("dropdown '${type.name}' changed to $changed");
                     return true;
                   },
                   mediaLinkInsertInterceptor:
@@ -123,6 +168,10 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   print('codeview either focused or unfocused');
                 }, onInit: () {
                   print('init');
+                  // Inject the language into the WebView's HTML DOM
+                  controller.editorController!.evaluateJavascript(
+                      source:
+                          "document.documentElement.lang = 'de'; document.querySelector('.note-editable').lang = 'de';");
                 },
                     //this is commented because it overrides the default Summernote handlers
                     /*onImageLinkInsert: (String? url) {
@@ -177,8 +226,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16.0,
                   children: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
@@ -186,11 +236,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.undo();
                       },
-                      child:
-                          Text('Undo', style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
+                      child: Text(ExampleI18n.de['undo']!,
+                          style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -198,11 +245,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.clear();
                       },
-                      child:
-                          Text('Reset', style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
+                      child: Text(ExampleI18n.de['reset']!,
+                          style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -219,12 +263,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         });
                       },
                       child: Text(
-                        'Submit',
+                        ExampleI18n.de['submit']!,
                         style: TextStyle(color: Colors.white),
                       ),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -234,7 +275,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.redo();
                       },
                       child: Text(
-                        'Redo',
+                        ExampleI18n.de['redo']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -247,8 +288,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16.0,
                   children: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
@@ -256,11 +298,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.disable();
                       },
-                      child: Text('Disable',
+                      child: Text(ExampleI18n.de['disable']!,
                           style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -270,18 +309,18 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.enable();
                       },
                       child: Text(
-                        'Enable',
+                        ExampleI18n.de['enable']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16.0,
                   children: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
@@ -290,11 +329,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.insertText('Google');
                       },
-                      child: Text('Insert Text',
+                      child: Text(ExampleI18n.de['insertText']!,
                           style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -304,7 +340,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.insertHtml(
                             '''<p style="color: blue">Google in blue</p>''');
                       },
-                      child: Text('Insert HTML',
+                      child: Text(ExampleI18n.de['insertHtml']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                   ],
@@ -312,8 +348,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16.0,
                   children: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
@@ -324,12 +361,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             'Google linked', 'https://google.com', true);
                       },
                       child: Text(
-                        'Insert Link',
+                        ExampleI18n.de['insertLink']!,
                         style: TextStyle(color: Colors.white),
                       ),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -341,18 +375,18 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             filename: 'Google network image');
                       },
                       child: Text(
-                        'Insert network image',
+                        ExampleI18n.de['insertNetworkImage']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16.0,
                   children: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
@@ -361,11 +395,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.addNotification(
                             'Info notification', NotificationType.info);
                       },
-                      child:
-                          Text('Info', style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
+                      child: Text(ExampleI18n.de['info']!,
+                          style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -374,11 +405,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.addNotification(
                             'Warning notification', NotificationType.warning);
                       },
-                      child: Text('Warning',
+                      child: Text(ExampleI18n.de['warning']!,
                           style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -389,12 +417,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             'Success notification', NotificationType.success);
                       },
                       child: Text(
-                        'Success',
+                        ExampleI18n.de['success']!,
                         style: TextStyle(color: Colors.white),
                       ),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -405,18 +430,18 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             'Danger notification', NotificationType.danger);
                       },
                       child: Text(
-                        'Danger',
+                        ExampleI18n.de['danger']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16.0,
                   children: <Widget>[
                     TextButton(
                       style: TextButton.styleFrom(
@@ -425,11 +450,8 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.addNotification('Plaintext notification',
                             NotificationType.plaintext);
                       },
-                      child: Text('Plaintext',
+                      child: Text(ExampleI18n.de['plaintext']!,
                           style: TextStyle(color: Colors.white)),
-                    ),
-                    SizedBox(
-                      width: 16,
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
@@ -439,7 +461,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.removeNotification();
                       },
                       child: Text(
-                        'Remove',
+                        ExampleI18n.de['remove']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),

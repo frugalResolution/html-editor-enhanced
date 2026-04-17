@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:html_editor_enhanced/utils/i18n.dart';
 
 /// Options that modify the editor and its behavior
 class HtmlEditorOptions {
@@ -19,6 +20,7 @@ class HtmlEditorOptions {
     this.hint,
     this.initialText,
     this.inputType = HtmlInputType.text,
+    this.lang,
     this.mobileContextMenu,
     this.mobileLongPressDuration,
     this.mobileInitialScripts,
@@ -124,6 +126,9 @@ class HtmlEditorOptions {
   ///
   /// Default value is false.
   final bool spellCheck;
+
+  /// The lang attribute sets the language of the HTML document.
+  final String? lang;
 }
 
 /// Options that modify the toolbar and its behavior
@@ -190,6 +195,7 @@ class HtmlToolbarOptions {
     this.gridViewHorizontalSpacing = 5,
     this.gridViewVerticalSpacing = 5,
     this.allowImagePicking = true,
+    this.i18n = const HtmlToolbarI18n(),
   });
 
   /// Allows you to set the allowed extensions when a user inserts an audio file
@@ -408,6 +414,12 @@ class HtmlToolbarOptions {
   /// Allow the user to choose an image from their device when image selection
   /// is enabled. Inserting images via URL will still be possible if this is false.
   final bool allowImagePicking;
+
+  /// Localization for the toolbar.
+  ///
+  /// The default value is English [HtmlToolbarI18n()].
+  /// For German, use [HtmlToolbarI18n.de].
+  final HtmlToolbarI18n i18n;
 }
 
 /// Other options such as the height of the widget and the decoration surrounding it

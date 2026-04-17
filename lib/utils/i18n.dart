@@ -1,0 +1,348 @@
+import 'dart:convert';
+
+/// Class to handle localization of the toolbar
+class HtmlToolbarI18n {
+  const HtmlToolbarI18n({
+    this.cancel = 'Cancel',
+    this.ok = 'OK',
+    this.reset = 'Reset',
+    this.help = 'Help',
+    this.done = 'Done',
+    this.bold = 'Bold',
+    this.italic = 'Italic',
+    this.underline = 'Underline',
+    this.clearFormatting = 'Clear formatting',
+    this.strikethrough = 'Strikethrough',
+    this.superscript = 'Superscript',
+    this.subscript = 'Subscript',
+    this.fontColor = 'Font color',
+    this.highlightColor = 'Highlight color',
+    this.orderedList = 'Ordered list',
+    this.unorderedList = 'Unordered list',
+    this.alignLeft = 'Align left',
+    this.alignCenter = 'Align center',
+    this.alignRight = 'Align right',
+    this.alignJustify = 'Align justify',
+    this.increaseIndent = 'Increase indent',
+    this.decreaseIndent = 'Decrease indent',
+    this.insertLink = 'Insert link',
+    this.insertImage = 'Insert image',
+    this.insertAudio = 'Insert audio',
+    this.insertVideo = 'Insert video',
+    this.insertFile = 'Insert file',
+    this.insertTable = 'Insert table',
+    this.insertHorizontalRule = 'Insert horizontal rule',
+    this.fullscreen = 'Fullscreen',
+    this.codeview = 'Codeview',
+    this.undo = 'Undo',
+    this.redo = 'Redo',
+    this.helpTitle = 'Help',
+    this.copy = 'Copy',
+    this.paste = 'Paste',
+    this.textToDisplay = 'Text to display',
+    this.url = 'URL',
+    this.openInNewWindow = 'Open in new window',
+    this.selectFromFiles = 'Select from files',
+    this.chooseAudio = 'Choose audio',
+    this.chooseVideo = 'Choose video',
+    this.chooseFile = 'Choose file',
+    this.chooseImage = 'Choose image',
+    this.rows = 'Rows',
+    this.columns = 'Columns',
+    this.style = 'Style',
+    this.fontName = 'Font name',
+    this.fontSize = 'Font size',
+    this.fontSizeUnit = 'Font size unit',
+    this.listStyle = 'List style',
+    this.lineHeight = 'Line height',
+    this.caseConverter = 'Case converter',
+    this.normal = 'Normal',
+    this.quote = 'Quote',
+    this.code = 'Code',
+    this.header1 = 'Header 1',
+    this.header2 = 'Header 2',
+    this.header3 = 'Header 3',
+    this.header4 = 'Header 4',
+    this.header5 = 'Header 5',
+    this.header6 = 'Header 6',
+    this.numbered = 'Numbered',
+    this.lowerAlpha = 'Lower Alpha',
+    this.lowerRoman = 'Lower Roman',
+    this.upperAlpha = 'Upper Alpha',
+    this.upperRoman = 'Upper Roman',
+    this.disc = 'Disc',
+    this.circle = 'Circle',
+    this.square = 'Square',
+    this.sentenceCase = 'Sentence case',
+    this.lowercase = 'lowercase',
+    this.uppercase = 'UPPERCASE',
+    this.titleCase = 'Title Case',
+    this.helpAction = 'Action',
+    this.helpShortcut = 'Shortcut',
+    this.helpEscape = 'Escape',
+    this.helpInsertParagraph = 'Insert Paragraph',
+    this.helpUndo = 'Undo the last command',
+    this.helpRedo = 'Redo the last command',
+    this.ltr = 'Left to right',
+    this.rtl = 'Right to left',
+  });
+
+  final String cancel;
+  final String ok;
+  final String reset;
+  final String help;
+  final String done;
+  final String bold;
+  final String italic;
+  final String underline;
+  final String clearFormatting;
+  final String strikethrough;
+  final String superscript;
+  final String subscript;
+  final String fontColor;
+  final String highlightColor;
+  final String orderedList;
+  final String unorderedList;
+  final String alignLeft;
+  final String alignCenter;
+  final String alignRight;
+  final String alignJustify;
+  final String increaseIndent;
+  final String decreaseIndent;
+  final String insertLink;
+  final String insertImage;
+  final String insertAudio;
+  final String insertVideo;
+  final String insertFile;
+  final String insertTable;
+  final String insertHorizontalRule;
+  final String fullscreen;
+  final String codeview;
+  final String undo;
+  final String redo;
+  final String helpTitle;
+  final String copy;
+  final String paste;
+  final String textToDisplay;
+  final String url;
+  final String openInNewWindow;
+  final String selectFromFiles;
+  final String chooseAudio;
+  final String chooseVideo;
+  final String chooseFile;
+  final String chooseImage;
+  final String rows;
+  final String columns;
+  final String style;
+  final String fontName;
+  final String fontSize;
+  final String fontSizeUnit;
+  final String listStyle;
+  final String lineHeight;
+  final String caseConverter;
+  final String normal;
+  final String quote;
+  final String code;
+  final String header1;
+  final String header2;
+  final String header3;
+  final String header4;
+  final String header5;
+  final String header6;
+  final String numbered;
+  final String lowerAlpha;
+  final String lowerRoman;
+  final String upperAlpha;
+  final String upperRoman;
+  final String disc;
+  final String circle;
+  final String square;
+  final String sentenceCase;
+  final String lowercase;
+  final String uppercase;
+  final String titleCase;
+  final String helpAction;
+  final String helpShortcut;
+  final String helpEscape;
+  final String helpInsertParagraph;
+  final String helpUndo;
+  final String helpRedo;
+  final String ltr;
+  final String rtl;
+
+  factory HtmlToolbarI18n.fromMap(Map<String, dynamic> map) {
+    return HtmlToolbarI18n(
+      cancel: map['cancel'] ?? 'Cancel',
+      ok: map['ok'] ?? 'OK',
+      reset: map['reset'] ?? 'Reset',
+      help: map['help'] ?? 'Help',
+      done: map['done'] ?? 'Done',
+      bold: map['bold'] ?? 'Bold',
+      italic: map['italic'] ?? 'Italic',
+      underline: map['underline'] ?? 'Underline',
+      clearFormatting: map['clearFormatting'] ?? 'Clear formatting',
+      strikethrough: map['strikethrough'] ?? 'Strikethrough',
+      superscript: map['superscript'] ?? 'Superscript',
+      subscript: map['subscript'] ?? 'Subscript',
+      fontColor: map['fontColor'] ?? 'Font color',
+      highlightColor: map['highlightColor'] ?? 'Highlight color',
+      orderedList: map['orderedList'] ?? 'Ordered list',
+      unorderedList: map['unorderedList'] ?? 'Unordered list',
+      alignLeft: map['alignLeft'] ?? 'Align left',
+      alignCenter: map['alignCenter'] ?? 'Align center',
+      alignRight: map['alignRight'] ?? 'Align right',
+      alignJustify: map['alignJustify'] ?? 'Align justify',
+      increaseIndent: map['increaseIndent'] ?? 'Increase indent',
+      decreaseIndent: map['decreaseIndent'] ?? 'Decrease indent',
+      insertLink: map['insertLink'] ?? 'Insert link',
+      insertImage: map['insertImage'] ?? 'Insert image',
+      insertAudio: map['insertAudio'] ?? 'Insert audio',
+      insertVideo: map['insertVideo'] ?? 'Insert video',
+      insertFile: map['insertFile'] ?? 'Insert file',
+      insertTable: map['insertTable'] ?? 'Insert table',
+      insertHorizontalRule:
+          map['insertHorizontalRule'] ?? 'Insert horizontal rule',
+      fullscreen: map['fullscreen'] ?? 'Fullscreen',
+      codeview: map['codeview'] ?? 'Codeview',
+      undo: map['undo'] ?? 'Undo',
+      redo: map['redo'] ?? 'Redo',
+      helpTitle: map['helpTitle'] ?? 'Help',
+      copy: map['copy'] ?? 'Copy',
+      paste: map['paste'] ?? 'Paste',
+      textToDisplay: map['textToDisplay'] ?? 'Text to display',
+      url: map['url'] ?? 'URL',
+      openInNewWindow: map['openInNewWindow'] ?? 'Open in new window',
+      selectFromFiles: map['selectFromFiles'] ?? 'Select from files',
+      chooseAudio: map['chooseAudio'] ?? 'Choose audio',
+      chooseVideo: map['chooseVideo'] ?? 'Choose video',
+      chooseFile: map['chooseFile'] ?? 'Choose file',
+      chooseImage: map['chooseImage'] ?? 'Choose image',
+      rows: map['rows'] ?? 'Rows',
+      columns: map['columns'] ?? 'Columns',
+      style: map['style'] ?? 'Style',
+      fontName: map['fontName'] ?? 'Font name',
+      fontSize: map['fontSize'] ?? 'Font size',
+      fontSizeUnit: map['fontSizeUnit'] ?? 'Font size unit',
+      listStyle: map['listStyle'] ?? 'List style',
+      lineHeight: map['lineHeight'] ?? 'Line height',
+      caseConverter: map['caseConverter'] ?? 'Case converter',
+      normal: map['normal'] ?? 'Normal',
+      quote: map['quote'] ?? 'Quote',
+      code: map['code'] ?? 'Code',
+      header1: map['header1'] ?? 'Header 1',
+      header2: map['header2'] ?? 'Header 2',
+      header3: map['header3'] ?? 'Header 3',
+      header4: map['header4'] ?? 'Header 4',
+      header5: map['header5'] ?? 'Header 5',
+      header6: map['header6'] ?? 'Header 6',
+      numbered: map['numbered'] ?? 'Numbered',
+      lowerAlpha: map['lowerAlpha'] ?? 'Lower Alpha',
+      lowerRoman: map['lowerRoman'] ?? 'Lower Roman',
+      upperAlpha: map['upperAlpha'] ?? 'Upper Alpha',
+      upperRoman: map['upperRoman'] ?? 'Upper Roman',
+      disc: map['disc'] ?? 'Disc',
+      circle: map['circle'] ?? 'Circle',
+      square: map['square'] ?? 'Square',
+      sentenceCase: map['sentenceCase'] ?? 'Sentence case',
+      lowercase: map['lowercase'] ?? 'lowercase',
+      uppercase: map['uppercase'] ?? 'UPPERCASE',
+      titleCase: map['titleCase'] ?? 'Title Case',
+      helpAction: map['helpAction'] ?? 'Action',
+      helpShortcut: map['helpShortcut'] ?? 'Shortcut',
+      helpEscape: map['helpEscape'] ?? 'Escape',
+      helpInsertParagraph: map['helpInsertParagraph'] ?? 'Insert Paragraph',
+      helpUndo: map['helpUndo'] ?? 'Undo the last command',
+      helpRedo: map['helpRedo'] ?? 'Redo the last command',
+      ltr: map['ltr'] ?? 'Left to right',
+      rtl: map['rtl'] ?? 'Right to left',
+    );
+  }
+
+  factory HtmlToolbarI18n.fromJson(String source) =>
+      HtmlToolbarI18n.fromMap(json.decode(source));
+
+  static const HtmlToolbarI18n de = HtmlToolbarI18n(
+    cancel: 'Abbrechen',
+    ok: 'OK',
+    reset: 'Zurücksetzen',
+    help: 'Hilfe',
+    done: 'Fertig',
+    bold: 'Fett',
+    italic: 'Kursiv',
+    underline: 'Unterstrichen',
+    clearFormatting: 'Formatierung löschen',
+    strikethrough: 'Durchgestrichen',
+    superscript: 'Hochgestellt',
+    subscript: 'Tiefgestellt',
+    fontColor: 'Schriftfarbe',
+    highlightColor: 'Hintergrundfarbe',
+    orderedList: 'Nummerierte Liste',
+    unorderedList: 'Aufzählungsliste',
+    alignLeft: 'Linksbündig',
+    alignCenter: 'Zentriert',
+    alignRight: 'Rechtsbündig',
+    alignJustify: 'Blocksatz',
+    increaseIndent: 'Einzug vergrößern',
+    decreaseIndent: 'Einzug verkleinern',
+    insertLink: 'Link einfügen',
+    insertImage: 'Bild einfügen',
+    insertAudio: 'Audio einfügen',
+    insertVideo: 'Video einfügen',
+    insertFile: 'Datei einfügen',
+    insertTable: 'Tabelle einfügen',
+    insertHorizontalRule: 'Horizontale Linie einfügen',
+    fullscreen: 'Vollbild',
+    codeview: 'Code-Ansicht',
+    undo: 'Rückgängig',
+    redo: 'Wiederholen',
+    helpTitle: 'Hilfe',
+    copy: 'Kopieren',
+    paste: 'Einfügen',
+    textToDisplay: 'Anzeigetext',
+    url: 'URL',
+    openInNewWindow: 'In neuem Fenster öffnen',
+    selectFromFiles: 'Aus Dateien auswählen',
+    chooseAudio: 'Audio auswählen',
+    chooseVideo: 'Video auswählen',
+    chooseFile: 'Datei auswählen',
+    chooseImage: 'Bild auswählen',
+    rows: 'Zeilen',
+    columns: 'Spalten',
+    style: 'Stil',
+    fontName: 'Schriftart',
+    fontSize: 'Schriftgröße',
+    fontSizeUnit: 'Schriftgrößeneinheit',
+    listStyle: 'Listenstil',
+    lineHeight: 'Zeilenhöhe',
+    caseConverter: 'Groß-/Kleinschreibung',
+    normal: 'Normal',
+    quote: 'Zitat',
+    code: 'Code',
+    header1: 'Überschrift 1',
+    header2: 'Überschrift 2',
+    header3: 'Überschrift 3',
+    header4: 'Überschrift 4',
+    header5: 'Überschrift 5',
+    header6: 'Überschrift 6',
+    numbered: 'Nummeriert',
+    lowerAlpha: 'Kleinbuchstaben',
+    lowerRoman: 'Römisch klein',
+    upperAlpha: 'Großbuchstaben',
+    upperRoman: 'Römisch groß',
+    disc: 'Punkt',
+    circle: 'Kreis',
+    square: 'Quadrat',
+    sentenceCase: 'Satzanfang groß',
+    lowercase: 'kleinbuchstaben',
+    uppercase: 'GROSSBUCHSTABEN',
+    titleCase: 'Wortanfang groß',
+    helpAction: 'Aktion',
+    helpShortcut: 'Tastenkombination',
+    helpEscape: 'Escape',
+    helpInsertParagraph: 'Absatz einfügen',
+    helpUndo: 'Den letzten Befehl rückgängig machen',
+    helpRedo: 'Den letzten Befehl wiederholen',
+    ltr: 'Links nach rechts',
+    rtl: 'Rechts nach links',
+  );
+}

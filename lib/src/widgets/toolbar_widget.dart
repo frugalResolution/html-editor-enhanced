@@ -2,9 +2,7 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:html_editor_enhanced/html_editor.dart';
 import 'package:html_editor_enhanced/utils/utils.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -25,7 +23,7 @@ class ToolbarWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() {
+  ToolbarWidgetState createState() {
     return ToolbarWidgetState();
   }
 }
@@ -67,9 +65,6 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
   /// Sets the selected item for the font size dropdown
   double _fontSizeSelectedItem = 3;
 
-  /// Keeps track of the current font size in px
-  double _actualFontSizeSelectedItem = 16;
-
   /// Sets the selected item for the font units dropdown
   String _fontSizeUnitSelectedItem = 'pt';
 
@@ -91,377 +86,160 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
   /// Tracks the expanded status of the toolbar
   bool _isExpanded = false;
 
+  void disable() {
+    this.setState(() {
+      _enabled = false;
+    });
+  }
+
+  void enable() {
+    this.setState(() {
+      _enabled = true;
+    });
+  }
+
+  void updateToolbar(Map<String, dynamic>? json) {
+    this.setState(() {});
+  }
+
   @override
   void initState() {
     widget.controller.toolbar = this;
     _isExpanded = widget.htmlToolbarOptions.initiallyExpanded;
     for (var t in widget.htmlToolbarOptions.defaultToolbarButtons) {
       if (t is FontButtons) {
-        _fontSelected = List<bool>.filled(t.getIcons1().length, false);
-        _miscFontSelected = List<bool>.filled(t.getIcons2().length, false);
+        _fontSelected = List<bool>.filled(
+            t.getIcons1(widget.htmlToolbarOptions.i18n).length, false);
+        _miscFontSelected = List<bool>.filled(
+            t.getIcons2(widget.htmlToolbarOptions.i18n).length, false);
       }
       if (t is ColorButtons) {
-        _colorSelected = List<bool>.filled(t.getIcons().length, false);
+        _colorSelected = List<bool>.filled(
+            t.getIcons(widget.htmlToolbarOptions.i18n).length, false);
       }
       if (t is ListButtons) {
-        _listSelected = List<bool>.filled(t.getIcons().length, false);
-      }
-      if (t is OtherButtons) {
-        _miscSelected = List<bool>.filled(t.getIcons1().length, false);
+        _listSelected = List<bool>.filled(
+            t.getIcons(widget.htmlToolbarOptions.i18n).length, false);
       }
       if (t is ParagraphButtons) {
-        _alignSelected = List<bool>.filled(t.getIcons1().length, false);
+        _alignSelected = List<bool>.filled(
+            t.getIcons1(widget.htmlToolbarOptions.i18n).length, false);
+      }
+      if (t is OtherButtons) {
+        _miscSelected = List<bool>.filled(
+            t.getIcons1(widget.htmlToolbarOptions.i18n).length, false);
       }
     }
     super.initState();
   }
 
-  void disable() {
-    setState(mounted, this.setState, () {
-      _enabled = false;
-    });
-  }
-
-  void enable() {
-    setState(mounted, this.setState, () {
-      _enabled = true;
-    });
-  }
-
-  /// Updates the toolbar from the JS handler on mobile and the onMessage
-  /// listener on web
-  void updateToolbar(Map<String, dynamic> json) {
-    //get parent element
-    String parentElem = json['style'] ?? '';
-    //get font name
-    var fontName = (json['fontName'] ?? '').toString().replaceAll('"', '');
-    //get font size
-    var fontSize = double.tryParse(json['fontSize']) ?? 3;
-    //get bold/underline/italic status
-    var fontList = (json['font'] as List<dynamic>).cast<bool?>();
-    //get superscript/subscript/strikethrough status
-    var miscFontList = (json['miscFont'] as List<dynamic>).cast<bool?>();
-    //get forecolor/backcolor
-    var colorList = (json['color'] as List<dynamic>).cast<String?>();
-    //get ordered/unordered list status
-    var paragraphList = (json['paragraph'] as List<dynamic>).cast<bool?>();
-    //get justify status
-    var alignList = (json['align'] as List<dynamic>).cast<bool?>();
-    //get line height
-    String lineHeight = json['lineHeight'] ?? '';
-    //get list icon type
-    String listType = json['listStyle'] ?? '';
-    //get text direction
-    String textDir = json['direction'] ?? 'ltr';
-    //check the parent element if it matches one of the predetermined styles and update the toolbar
-    if (['pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-        .contains(parentElem)) {
-      setState(mounted, this.setState, () {
-        _fontSelectedItem = parentElem;
-      });
-    } else {
-      setState(mounted, this.setState, () {
-        _fontSelectedItem = 'p';
-      });
-    }
-    //check the font name if it matches one of the predetermined fonts and update the toolbar
-    if (['Courier New', 'sans-serif', 'Times New Roman'].contains(fontName)) {
-      setState(mounted, this.setState, () {
-        _fontNameSelectedItem = fontName;
-      });
-    } else {
-      setState(mounted, this.setState, () {
-        _fontNameSelectedItem = 'sans-serif';
-      });
-    }
-    //update the fore/back selected color if necessary
-    if (colorList[0] != null && colorList[0]!.isNotEmpty) {
-      setState(mounted, this.setState, () {
-        var rgb = colorList[0]!.replaceAll('rgb(', '').replaceAll(')', '');
-        var rgbList = rgb.split(', ');
-        _foreColorSelected = Color.fromRGBO(int.parse(rgbList[0]),
-            int.parse(rgbList[1]), int.parse(rgbList[2]), 1);
-      });
-    } else {
-      setState(mounted, this.setState, () {
-        _foreColorSelected = Colors.black;
-      });
-    }
-    if (colorList[1] != null && colorList[1]!.isNotEmpty) {
-      setState(mounted, this.setState, () {
-        _backColorSelected =
-            Color(int.parse(colorList[1]!, radix: 16) + 0xFF000000);
-      });
-    } else {
-      setState(mounted, this.setState, () {
-        _backColorSelected = Colors.yellow;
-      });
-    }
-    //check the list style if it matches one of the predetermined styles and update the toolbar
-    if ([
-      'decimal',
-      'lower-alpha',
-      'upper-alpha',
-      'lower-roman',
-      'upper-roman',
-      'disc',
-      'circle',
-      'square'
-    ].contains(listType)) {
-      setState(mounted, this.setState, () {
-        _listStyleSelectedItem = listType;
-      });
-    } else {
-      _listStyleSelectedItem = null;
-    }
-    //update the lineheight selected item if necessary
-    if (lineHeight.isNotEmpty && lineHeight.endsWith('px')) {
-      var lineHeightDouble =
-          double.tryParse(lineHeight.replaceAll('px', '')) ?? 16;
-      var lineHeights = <double>[1, 1.2, 1.4, 1.5, 1.6, 1.8, 2, 3];
-      lineHeights =
-          lineHeights.map((e) => e * _actualFontSizeSelectedItem).toList();
-      if (lineHeights.contains(lineHeightDouble)) {
-        setState(mounted, this.setState, () {
-          _lineHeightSelectedItem =
-              lineHeightDouble / _actualFontSizeSelectedItem;
-        });
-      }
-    } else if (lineHeight == 'normal') {
-      setState(mounted, this.setState, () {
-        _lineHeightSelectedItem = 1.0;
-      });
-    }
-    //check if the font size matches one of the predetermined sizes and update the toolbar
-    if ([1, 2, 3, 4, 5, 6, 7].contains(fontSize)) {
-      setState(mounted, this.setState, () {
-        _fontSizeSelectedItem = fontSize;
-      });
-    }
-    if (textDir == 'ltr') {
-      setState(mounted, this.setState, () {
-        _textDirectionSelected = [true, false];
-      });
-    } else if (textDir == 'rtl') {
-      setState(mounted, this.setState, () {
-        _textDirectionSelected = [false, true];
-      });
-    }
-    //use the remaining bool lists to update the selected items accordingly
-    setState(mounted, this.setState, () {
-      for (var t in widget.htmlToolbarOptions.defaultToolbarButtons) {
-        if (t is FontButtons) {
-          for (var i = 0; i < _fontSelected.length; i++) {
-            if (t.getIcons1()[i].icon == Icons.format_bold) {
-              _fontSelected[i] = fontList[0] ?? false;
-            }
-            if (t.getIcons1()[i].icon == Icons.format_italic) {
-              _fontSelected[i] = fontList[1] ?? false;
-            }
-            if (t.getIcons1()[i].icon == Icons.format_underline) {
-              _fontSelected[i] = fontList[2] ?? false;
-            }
-          }
-          for (var i = 0; i < _miscFontSelected.length; i++) {
-            if (t.getIcons2()[i].icon == Icons.format_strikethrough) {
-              _miscFontSelected[i] = miscFontList[0] ?? false;
-            }
-            if (t.getIcons2()[i].icon == Icons.superscript) {
-              _miscFontSelected[i] = miscFontList[1] ?? false;
-            }
-            if (t.getIcons2()[i].icon == Icons.subscript) {
-              _miscFontSelected[i] = miscFontList[2] ?? false;
-            }
-          }
-        }
-        if (t is ListButtons) {
-          for (var i = 0; i < _listSelected.length; i++) {
-            if (t.getIcons()[i].icon == Icons.format_list_bulleted) {
-              _listSelected[i] = paragraphList[0] ?? false;
-            }
-            if (t.getIcons()[i].icon == Icons.format_list_numbered) {
-              _listSelected[i] = paragraphList[1] ?? false;
-            }
-          }
-        }
-        if (t is ParagraphButtons) {
-          for (var i = 0; i < _alignSelected.length; i++) {
-            if (t.getIcons1()[i].icon == Icons.format_align_left) {
-              _alignSelected[i] = alignList[0] ?? false;
-            }
-            if (t.getIcons1()[i].icon == Icons.format_align_center) {
-              _alignSelected[i] = alignList[1] ?? false;
-            }
-            if (t.getIcons1()[i].icon == Icons.format_align_right) {
-              _alignSelected[i] = alignList[2] ?? false;
-            }
-            if (t.getIcons1()[i].icon == Icons.format_align_justify) {
-              _alignSelected[i] = alignList[3] ?? false;
-            }
-          }
-        }
-      }
-    });
-    if (widget.callbacks?.onChangeSelection != null) {
-      widget.callbacks!.onChangeSelection!.call(EditorSettings(
-          parentElement: parentElem,
-          fontName: fontName,
-          fontSize: fontSize,
-          isBold: fontList[0] ?? false,
-          isItalic: fontList[1] ?? false,
-          isUnderline: fontList[2] ?? false,
-          isStrikethrough: miscFontList[0] ?? false,
-          isSuperscript: miscFontList[1] ?? false,
-          isSubscript: miscFontList[2] ?? false,
-          foregroundColor: _foreColorSelected,
-          backgroundColor: _backColorSelected,
-          isUl: paragraphList[0] ?? false,
-          isOl: paragraphList[1] ?? false,
-          isAlignLeft: alignList[0] ?? false,
-          isAlignCenter: alignList[1] ?? false,
-          isAlignRight: alignList[2] ?? false,
-          isAlignJustify: alignList[3] ?? false,
-          lineHeight: _lineHeightSelectedItem,
-          textDirection:
-              textDir == 'rtl' ? TextDirection.rtl : TextDirection.ltr));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.htmlToolbarOptions.toolbarType == ToolbarType.nativeGrid) {
-      return PointerInterceptor(
-        child: AbsorbPointer(
-          absorbing: !_enabled,
-          child: Opacity(
-            opacity: _enabled ? 1 : 0.5,
-            child: Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Wrap(
-                runSpacing: widget.htmlToolbarOptions.gridViewVerticalSpacing,
-                spacing: widget.htmlToolbarOptions.gridViewHorizontalSpacing,
+      return AbsorbPointer(
+        absorbing: !_enabled,
+        child: Opacity(
+          opacity: _enabled ? 1 : 0.5,
+          child: Column(
+            children: [
+              GridView.count(
+                padding: const EdgeInsets.all(5),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: MediaQuery.of(context).size.width ~/
+                    widget.htmlToolbarOptions.toolbarItemHeight,
+                childAspectRatio: 1,
+                mainAxisSpacing:
+                    widget.htmlToolbarOptions.gridViewVerticalSpacing,
+                crossAxisSpacing:
+                    widget.htmlToolbarOptions.gridViewHorizontalSpacing,
                 children: _buildChildren(),
               ),
-            ),
+            ],
           ),
         ),
       );
     } else if (widget.htmlToolbarOptions.toolbarType ==
         ToolbarType.nativeScrollable) {
-      return PointerInterceptor(
-        child: AbsorbPointer(
-          absorbing: !_enabled,
-          child: Opacity(
-            opacity: _enabled ? 1 : 0.5,
-            child: Container(
-              height: widget.htmlToolbarOptions.toolbarItemHeight + 15,
-              child: Padding(
-                padding: const EdgeInsets.all(5.0),
-                child: CustomScrollView(
-                  scrollDirection: Axis.horizontal,
-                  slivers: [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: _buildChildren(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      return AbsorbPointer(
+        absorbing: !_enabled,
+        child: Opacity(
+          opacity: _enabled ? 1 : 0.5,
+          child: Container(
+            height: widget.htmlToolbarOptions.toolbarItemHeight + 10,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+              children: intersperse(
+                widget.htmlToolbarOptions.renderSeparatorWidget
+                    ? widget.htmlToolbarOptions.separatorWidget
+                    : Container(width: 0, height: 0),
+                _buildChildren(),
+              ).toList(),
             ),
           ),
         ),
       );
     } else if (widget.htmlToolbarOptions.toolbarType ==
         ToolbarType.nativeExpandable) {
-      return PointerInterceptor(
-        child: AbsorbPointer(
-          absorbing: !_enabled,
-          child: Opacity(
-            opacity: _enabled ? 1 : 0.5,
-            child: Container(
-              constraints: BoxConstraints(
-                maxHeight: _isExpanded
-                    ? MediaQuery.of(context).size.height
-                    : widget.htmlToolbarOptions.toolbarItemHeight + 15,
-              ),
-              child: _isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: Wrap(
-                        runSpacing:
-                            widget.htmlToolbarOptions.gridViewVerticalSpacing,
-                        spacing:
-                            widget.htmlToolbarOptions.gridViewHorizontalSpacing,
-                        children: _buildChildren()
-                          ..insert(
-                              0,
-                              Container(
-                                height:
-                                    widget.htmlToolbarOptions.toolbarItemHeight,
-                                child: IconButton(
-                                  icon: Icon(
-                                    _isExpanded
-                                        ? Icons.expand_less
-                                        : Icons.expand_more,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: () async {
-                                    setState(mounted, this.setState, () {
-                                      _isExpanded = !_isExpanded;
-                                    });
-                                    await Future.delayed(
-                                        Duration(milliseconds: 100));
-                                    if (kIsWeb) {
-                                      widget.controller.recalculateHeight();
-                                    } else {
-                                      await widget.controller.editorController!
-                                          .evaluateJavascript(
-                                              source:
-                                                  "var height = \$('div.note-editable').outerHeight(true); window.flutter_inappwebview.callHandler('setHeight', height);");
-                                    }
-                                  },
-                                ),
-                              )),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: CustomScrollView(
-                        scrollDirection: Axis.horizontal,
-                        shrinkWrap: true,
-                        slivers: [
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: ExpandIconDelegate(
-                                widget.htmlToolbarOptions.toolbarItemHeight,
-                                _isExpanded, () async {
-                              setState(mounted, this.setState, () {
-                                _isExpanded = !_isExpanded;
-                              });
-                              await Future.delayed(Duration(milliseconds: 100));
-                              if (kIsWeb) {
-                                widget.controller.recalculateHeight();
-                              } else {
-                                await widget.controller.editorController!
-                                    .evaluateJavascript(
-                                        source:
-                                            "var height = \$('div.note-editable').outerHeight(true); window.flutter_inappwebview.callHandler('setHeight', height);");
-                              }
-                            }),
+      return AbsorbPointer(
+        absorbing: !_enabled,
+        child: Opacity(
+          opacity: _enabled ? 1 : 0.5,
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: _isExpanded
+                  ? double.infinity
+                  : widget.htmlToolbarOptions.toolbarItemHeight + 15,
+            ),
+            child: CustomScrollView(
+              shrinkWrap: true,
+              physics: _isExpanded
+                  ? const NeverScrollableScrollPhysics()
+                  : const BouncingScrollPhysics(),
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: ExpandIconDelegate(
+                      widget.htmlToolbarOptions.toolbarItemHeight + 15,
+                      _isExpanded, () {
+                    setState(mounted, this.setState, () {
+                      _isExpanded = !_isExpanded;
+                    });
+                  }),
+                ),
+                _isExpanded
+                    ? SliverPadding(
+                        padding: const EdgeInsets.all(5),
+                        sliver: SliverGrid.count(
+                          crossAxisCount: MediaQuery.of(context).size.width ~/
+                              widget.htmlToolbarOptions.toolbarItemHeight,
+                          childAspectRatio: 1,
+                          mainAxisSpacing:
+                              widget.htmlToolbarOptions.gridViewVerticalSpacing,
+                          crossAxisSpacing: widget
+                              .htmlToolbarOptions.gridViewHorizontalSpacing,
+                          children: _buildChildren(),
+                        ),
+                      )
+                    : SliverToBoxAdapter(
+                        child: Container(
+                          height:
+                              widget.htmlToolbarOptions.toolbarItemHeight + 15,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 5),
+                            children: intersperse(
+                              widget.htmlToolbarOptions.renderSeparatorWidget
+                                  ? widget.htmlToolbarOptions.separatorWidget
+                                  : Container(width: 0, height: 0),
+                              _buildChildren(),
+                            ).toList(),
                           ),
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: _buildChildren(),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+              ],
             ),
           ),
         ),
@@ -507,7 +285,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               items: [
                 CustomDropdownMenuItem(
                     value: 'p',
-                    child: PointerInterceptor(child: Text('Normal'))),
+                    child: PointerInterceptor(
+                        child: Text(widget.htmlToolbarOptions.i18n.normal))),
                 CustomDropdownMenuItem(
                     value: 'blockquote',
                     child: PointerInterceptor(
@@ -517,7 +296,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                   left: BorderSide(
                                       color: Colors.grey, width: 3.0))),
                           padding: EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Text('Quote',
+                          child: Text(widget.htmlToolbarOptions.i18n.quote,
                               style: TextStyle(
                                   fontFamily: 'times', color: Colors.grey))),
                     )),
@@ -529,49 +308,49 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                               borderRadius: BorderRadius.circular(5),
                               color: Colors.grey),
                           padding: EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Text('Code',
+                          child: Text(widget.htmlToolbarOptions.i18n.code,
                               style: TextStyle(
                                   fontFamily: 'courier', color: Colors.white))),
                     )),
                 CustomDropdownMenuItem(
                   value: 'h1',
                   child: PointerInterceptor(
-                      child: Text('Header 1',
+                      child: Text(widget.htmlToolbarOptions.i18n.header1,
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 32))),
                 ),
                 CustomDropdownMenuItem(
                   value: 'h2',
                   child: PointerInterceptor(
-                      child: Text('Header 2',
+                      child: Text(widget.htmlToolbarOptions.i18n.header2,
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 24))),
                 ),
                 CustomDropdownMenuItem(
                   value: 'h3',
                   child: PointerInterceptor(
-                      child: Text('Header 3',
+                      child: Text(widget.htmlToolbarOptions.i18n.header3,
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 18))),
                 ),
                 CustomDropdownMenuItem(
                   value: 'h4',
                   child: PointerInterceptor(
-                      child: Text('Header 4',
+                      child: Text(widget.htmlToolbarOptions.i18n.header4,
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16))),
                 ),
                 CustomDropdownMenuItem(
                   value: 'h5',
                   child: PointerInterceptor(
-                      child: Text('Header 5',
+                      child: Text(widget.htmlToolbarOptions.i18n.header5,
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 13))),
                 ),
                 CustomDropdownMenuItem(
                   value: 'h6',
                   child: PointerInterceptor(
-                      child: Text('Header 6',
+                      child: Text(widget.htmlToolbarOptions.i18n.header6,
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 11))),
                 ),
@@ -644,7 +423,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                     value: 'Courier New',
                     child: PointerInterceptor(
                         child: Text('Courier New',
-                            style: TextStyle(fontFamily: 'Courier'))),
+                            style: TextStyle(fontFamily: 'courier'))),
                   ),
                   CustomDropdownMenuItem(
                     value: 'sans-serif',
@@ -656,12 +435,12 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                     value: 'Times New Roman',
                     child: PointerInterceptor(
                         child: Text('Times New Roman',
-                            style: TextStyle(fontFamily: 'Times'))),
+                            style: TextStyle(fontFamily: 'times'))),
                   ),
                 ],
                 value: _fontNameSelectedItem,
                 onChanged: (String? changed) async {
-                  void updateSelectedItem(dynamic changed) async {
+                  void updateSelectedItem(dynamic changed) {
                     if (changed is String) {
                       setState(mounted, this.setState, () {
                         _fontNameSelectedItem = changed;
@@ -724,45 +503,31 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 items: [
                   CustomDropdownMenuItem(
                     value: 1,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "11" : "8"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('1')),
                   ),
                   CustomDropdownMenuItem(
                     value: 2,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "13" : "10"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('2')),
                   ),
                   CustomDropdownMenuItem(
                     value: 3,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "16" : "12"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('3')),
                   ),
                   CustomDropdownMenuItem(
                     value: 4,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "19" : "14"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('4')),
                   ),
                   CustomDropdownMenuItem(
                     value: 5,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "24" : "18"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('5')),
                   ),
                   CustomDropdownMenuItem(
                     value: 6,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "32" : "24"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('6')),
                   ),
                   CustomDropdownMenuItem(
                     value: 7,
-                    child: PointerInterceptor(
-                        child: Text(
-                            "${_fontSizeUnitSelectedItem == "px" ? "48" : "36"} $_fontSizeUnitSelectedItem")),
+                    child: PointerInterceptor(child: Text('7')),
                   ),
                 ],
                 value: _fontSizeSelectedItem,
@@ -776,7 +541,6 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   }
 
                   if (changed != null) {
-                    var intChanged = changed.toInt();
                     var proceed =
                         await widget.htmlToolbarOptions.onDropdownChanged?.call(
                                 DropdownType.fontSize,
@@ -784,29 +548,6 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                 updateSelectedItem) ??
                             true;
                     if (proceed) {
-                      switch (intChanged) {
-                        case 1:
-                          _actualFontSizeSelectedItem = 11;
-                          break;
-                        case 2:
-                          _actualFontSizeSelectedItem = 13;
-                          break;
-                        case 3:
-                          _actualFontSizeSelectedItem = 16;
-                          break;
-                        case 4:
-                          _actualFontSizeSelectedItem = 19;
-                          break;
-                        case 5:
-                          _actualFontSizeSelectedItem = 24;
-                          break;
-                        case 6:
-                          _actualFontSizeSelectedItem = 32;
-                          break;
-                        case 7:
-                          _actualFontSizeSelectedItem = 48;
-                          break;
-                      }
                       widget.controller.execCommand('fontSize',
                           argument: changed.toString());
                       updateSelectedItem(changed);
@@ -888,78 +629,84 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
           ));
         }
       }
-      if (t is FontButtons) {
-        if (t.bold || t.italic || t.underline || t.clearAll) {
-          toolbarChildren.add(ToggleButtons(
-            constraints: BoxConstraints.tightFor(
-              width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
-              height: widget.htmlToolbarOptions.toolbarItemHeight - 2,
-            ),
-            color: widget.htmlToolbarOptions.buttonColor,
-            selectedColor: widget.htmlToolbarOptions.buttonSelectedColor,
-            fillColor: widget.htmlToolbarOptions.buttonFillColor,
-            focusColor: widget.htmlToolbarOptions.buttonFocusColor,
-            highlightColor: widget.htmlToolbarOptions.buttonHighlightColor,
-            hoverColor: widget.htmlToolbarOptions.buttonHoverColor,
-            splashColor: widget.htmlToolbarOptions.buttonSplashColor,
-            selectedBorderColor:
-                widget.htmlToolbarOptions.buttonSelectedBorderColor,
-            borderColor: widget.htmlToolbarOptions.buttonBorderColor,
-            borderRadius: widget.htmlToolbarOptions.buttonBorderRadius,
-            borderWidth: widget.htmlToolbarOptions.buttonBorderWidth,
-            renderBorder: widget.htmlToolbarOptions.renderBorder,
-            textStyle: widget.htmlToolbarOptions.textStyle,
-            onPressed: (int index) async {
-              void updateStatus() {
-                setState(mounted, this.setState, () {
-                  _fontSelected[index] = !_fontSelected[index];
-                });
-              }
+      if (t is FontButtons &&
+          (t.bold || t.italic || t.underline || t.clearAll)) {
+        toolbarChildren.add(ToggleButtons(
+          constraints: BoxConstraints.tightFor(
+            width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
+            height: widget.htmlToolbarOptions.toolbarItemHeight - 2,
+          ),
+          color: widget.htmlToolbarOptions.buttonColor,
+          selectedColor: widget.htmlToolbarOptions.buttonSelectedColor,
+          fillColor: widget.htmlToolbarOptions.buttonFillColor,
+          focusColor: widget.htmlToolbarOptions.buttonFocusColor,
+          highlightColor: widget.htmlToolbarOptions.buttonHighlightColor,
+          hoverColor: widget.htmlToolbarOptions.buttonHoverColor,
+          splashColor: widget.htmlToolbarOptions.buttonSplashColor,
+          selectedBorderColor:
+              widget.htmlToolbarOptions.buttonSelectedBorderColor,
+          borderColor: widget.htmlToolbarOptions.buttonBorderColor,
+          borderRadius: widget.htmlToolbarOptions.buttonBorderRadius,
+          borderWidth: widget.htmlToolbarOptions.buttonBorderWidth,
+          renderBorder: widget.htmlToolbarOptions.renderBorder,
+          textStyle: widget.htmlToolbarOptions.textStyle,
+          onPressed: (int index) async {
+            void updateStatus() {
+              setState(mounted, this.setState, () {
+                _fontSelected[index] = !_fontSelected[index];
+              });
+            }
 
-              if (t.getIcons1()[index].icon == Icons.format_bold) {
-                var proceed = await widget.htmlToolbarOptions.onButtonPressed
-                        ?.call(ButtonType.bold, _fontSelected[index],
-                            updateStatus) ??
-                    true;
-                if (proceed) {
-                  widget.controller.execCommand('bold');
-                  updateStatus();
-                }
+            if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.format_bold) {
+              var proceed = await widget.htmlToolbarOptions.onButtonPressed
+                      ?.call(ButtonType.bold, _fontSelected[index],
+                          updateStatus) ??
+                  true;
+              if (proceed) {
+                widget.controller.execCommand('bold');
+                updateStatus();
               }
-              if (t.getIcons1()[index].icon == Icons.format_italic) {
-                var proceed = await widget.htmlToolbarOptions.onButtonPressed
-                        ?.call(ButtonType.italic, _fontSelected[index],
-                            updateStatus) ??
-                    true;
-                if (proceed) {
-                  widget.controller.execCommand('italic');
-                  updateStatus();
-                }
+            }
+            if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.format_italic) {
+              var proceed = await widget.htmlToolbarOptions.onButtonPressed
+                      ?.call(ButtonType.italic, _fontSelected[index],
+                          updateStatus) ??
+                  true;
+              if (proceed) {
+                widget.controller.execCommand('italic');
+                updateStatus();
               }
-              if (t.getIcons1()[index].icon == Icons.format_underline) {
-                var proceed = await widget.htmlToolbarOptions.onButtonPressed
-                        ?.call(ButtonType.underline, _fontSelected[index],
-                            updateStatus) ??
-                    true;
-                if (proceed) {
-                  widget.controller.execCommand('underline');
-                  updateStatus();
-                }
+            }
+            if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.format_underline) {
+              var proceed = await widget.htmlToolbarOptions.onButtonPressed
+                      ?.call(ButtonType.underline, _fontSelected[index],
+                          updateStatus) ??
+                  true;
+              if (proceed) {
+                widget.controller.execCommand('underline');
+                updateStatus();
               }
-              if (t.getIcons1()[index].icon == Icons.format_clear) {
-                var proceed = await widget.htmlToolbarOptions.onButtonPressed
-                        ?.call(ButtonType.clearFormatting, null, null) ??
-                    true;
-                if (proceed) {
-                  widget.controller.execCommand('removeFormat');
-                }
+            }
+            if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.format_clear) {
+              var proceed = await widget.htmlToolbarOptions.onButtonPressed
+                      ?.call(ButtonType.clearFormatting, null, null) ??
+                  true;
+              if (proceed) {
+                widget.controller.execCommand('removeFormat');
               }
-            },
-            isSelected: _fontSelected,
-            children: t.getIcons1(),
-          ));
-        }
-        if (t.strikethrough || t.superscript || t.subscript) {
+            }
+          },
+          isSelected: _fontSelected,
+          children: t.getIcons1(widget.htmlToolbarOptions.i18n),
+        ));
+      }
+      if (t is FontButtons &&
+          (t.strikethrough || t.superscript || t.subscript)) {
+        if (t.getIcons2(widget.htmlToolbarOptions.i18n).isNotEmpty) {
           toolbarChildren.add(ToggleButtons(
             constraints: BoxConstraints.tightFor(
               width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
@@ -986,17 +733,19 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 });
               }
 
-              if (t.getIcons2()[index].icon == Icons.format_strikethrough) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_strikethrough) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.strikethrough,
                             _miscFontSelected[index], updateStatus) ??
                     true;
                 if (proceed) {
-                  widget.controller.execCommand('strikeThrough');
+                  widget.controller.execCommand('strikethrough');
                   updateStatus();
                 }
               }
-              if (t.getIcons2()[index].icon == Icons.superscript) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.superscript) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.superscript, _miscFontSelected[index],
                             updateStatus) ??
@@ -1006,7 +755,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus();
                 }
               }
-              if (t.getIcons2()[index].icon == Icons.subscript) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.subscript) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.subscript, _miscFontSelected[index],
                             updateStatus) ??
@@ -1018,7 +768,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               }
             },
             isSelected: _miscFontSelected,
-            children: t.getIcons2(),
+            children: t.getIcons2(widget.htmlToolbarOptions.i18n),
           ));
         }
       }
@@ -1047,18 +797,21 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               setState(mounted, this.setState, () {
                 _colorSelected[index] = !_colorSelected[index];
                 if (color != null &&
-                    t.getIcons()[index].icon == Icons.format_color_text) {
+                    t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                        Icons.format_color_text) {
                   _foreColorSelected = color;
                 }
                 if (color != null &&
-                    t.getIcons()[index].icon == Icons.format_color_fill) {
+                    t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                        Icons.format_color_fill) {
                   _backColorSelected = color;
                 }
               });
             }
 
             if (_colorSelected[index]) {
-              if (t.getIcons()[index].icon == Icons.format_color_text) {
+              if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_color_text) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.foregroundColor,
                             _colorSelected[index], updateStatus) ??
@@ -1072,7 +825,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus(null);
                 }
               }
-              if (t.getIcons()[index].icon == Icons.format_color_fill) {
+              if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_color_fill) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.highlightColor, _colorSelected[index],
                             updateStatus) ??
@@ -1088,13 +842,17 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               }
             } else {
               var proceed = true;
-              if (t.getIcons()[index].icon == Icons.format_color_text) {
+              if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_color_text) {
                 proceed = await widget.htmlToolbarOptions.onButtonPressed?.call(
                         ButtonType.foregroundColor,
                         _colorSelected[index],
                         updateStatus) ??
                     true;
-              } else if (t.getIcons()[index].icon == Icons.format_color_fill) {
+              } else if (t
+                      .getIcons(widget.htmlToolbarOptions.i18n)[index]
+                      .icon ==
+                  Icons.format_color_fill) {
                 proceed = await widget.htmlToolbarOptions.onButtonPressed?.call(
                         ButtonType.highlightColor,
                         _colorSelected[index],
@@ -1103,7 +861,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               }
               if (proceed) {
                 late Color newColor;
-                if (t.getIcons()[index].icon == Icons.format_color_text) {
+                if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                    Icons.format_color_text) {
                   newColor = _foreColorSelected;
                 } else {
                   newColor = _backColorSelected;
@@ -1119,7 +878,15 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             onColorChanged: (color) {
                               newColor = color;
                             },
-                            title: Text('Choose a Color',
+                            title: Text(
+                                t
+                                            .getIcons(widget
+                                                .htmlToolbarOptions.i18n)[index]
+                                            .icon ==
+                                        Icons.format_color_text
+                                    ? widget.htmlToolbarOptions.i18n.fontColor
+                                    : widget
+                                        .htmlToolbarOptions.i18n.highlightColor,
                                 style:
                                     Theme.of(context).textTheme.headlineSmall),
                             width: 40,
@@ -1147,11 +914,15 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
-                              child: Text('Cancel'),
+                              child:
+                                  Text(widget.htmlToolbarOptions.i18n.cancel),
                             ),
                             TextButton(
                                 onPressed: () {
-                                  if (t.getIcons()[index].icon ==
+                                  if (t
+                                          .getIcons(widget
+                                              .htmlToolbarOptions.i18n)[index]
+                                          .icon ==
                                       Icons.format_color_text) {
                                     setState(mounted, this.setState, () {
                                       _foreColorSelected = Colors.black;
@@ -1162,7 +933,10 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                     widget.controller.execCommand('foreColor',
                                         argument: 'initial');
                                   }
-                                  if (t.getIcons()[index].icon ==
+                                  if (t
+                                          .getIcons(widget
+                                              .htmlToolbarOptions.i18n)[index]
+                                          .icon ==
                                       Icons.format_color_fill) {
                                     setState(mounted, this.setState, () {
                                       _backColorSelected = Colors.yellow;
@@ -1175,10 +949,14 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                   }
                                   Navigator.of(context).pop();
                                 },
-                                child: Text('Reset to default color')),
+                                child:
+                                    Text(widget.htmlToolbarOptions.i18n.reset)),
                             TextButton(
                               onPressed: () {
-                                if (t.getIcons()[index].icon ==
+                                if (t
+                                        .getIcons(widget
+                                            .htmlToolbarOptions.i18n)[index]
+                                        .icon ==
                                     Icons.format_color_text) {
                                   widget.controller.execCommand('foreColor',
                                       argument: (newColor.toARGB32() & 0xFFFFFF)
@@ -1189,7 +967,10 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                     _foreColorSelected = newColor;
                                   });
                                 }
-                                if (t.getIcons()[index].icon ==
+                                if (t
+                                        .getIcons(widget
+                                            .htmlToolbarOptions.i18n)[index]
+                                        .icon ==
                                     Icons.format_color_fill) {
                                   widget.controller.execCommand('hiliteColor',
                                       argument: (newColor.toARGB32() & 0xFFFFFF)
@@ -1200,14 +981,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                     _backColorSelected = newColor;
                                   });
                                 }
-                                setState(mounted, this.setState, () {
-                                  _colorSelected[index] =
-                                      !_colorSelected[index];
-                                });
                                 Navigator.of(context).pop();
+                                updateStatus(newColor);
                               },
-                              child: Text('Set color'),
-                            )
+                              child: Text(widget.htmlToolbarOptions.i18n.ok),
+                            ),
                           ],
                         ),
                       );
@@ -1216,10 +994,10 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
             }
           },
           isSelected: _colorSelected,
-          children: t.getIcons(),
+          children: t.getIcons(widget.htmlToolbarOptions.i18n),
         ));
       }
-      if (t is ListButtons) {
+      if (t is ListButtons && (t.ul || t.ol || t.listStyles)) {
         if (t.ul || t.ol) {
           toolbarChildren.add(ToggleButtons(
             constraints: BoxConstraints.tightFor(
@@ -1247,7 +1025,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 });
               }
 
-              if (t.getIcons()[index].icon == Icons.format_list_bulleted) {
+              if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_list_bulleted) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.ul, _listSelected[index],
                             updateStatus) ??
@@ -1257,7 +1036,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus();
                 }
               }
-              if (t.getIcons()[index].icon == Icons.format_list_numbered) {
+              if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_list_numbered) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.ol, _listSelected[index],
                             updateStatus) ??
@@ -1269,7 +1049,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               }
             },
             isSelected: _listSelected,
-            children: t.getIcons(),
+            children: t.getIcons(widget.htmlToolbarOptions.i18n),
           ));
         }
         if (t.listStyles) {
@@ -1309,38 +1089,54 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 items: [
                   CustomDropdownMenuItem(
                     value: 'decimal',
-                    child: PointerInterceptor(child: Text('1. Numbered')),
+                    child: PointerInterceptor(
+                        child: Text(
+                            '1. ${widget.htmlToolbarOptions.i18n.numbered}')),
                   ),
                   CustomDropdownMenuItem(
                     value: 'lower-alpha',
-                    child: PointerInterceptor(child: Text('a. Lower Alpha')),
-                  ),
-                  CustomDropdownMenuItem(
-                    value: 'upper-alpha',
-                    child: PointerInterceptor(child: Text('A. Upper Alpha')),
+                    child: PointerInterceptor(
+                        child: Text(
+                            'a. ${widget.htmlToolbarOptions.i18n.lowerAlpha}')),
                   ),
                   CustomDropdownMenuItem(
                     value: 'lower-roman',
-                    child: PointerInterceptor(child: Text('i. Lower Roman')),
+                    child: PointerInterceptor(
+                        child: Text(
+                            'i. ${widget.htmlToolbarOptions.i18n.lowerRoman}')),
+                  ),
+                  CustomDropdownMenuItem(
+                    value: 'upper-alpha',
+                    child: PointerInterceptor(
+                        child: Text(
+                            'A. ${widget.htmlToolbarOptions.i18n.upperAlpha}')),
                   ),
                   CustomDropdownMenuItem(
                     value: 'upper-roman',
-                    child: PointerInterceptor(child: Text('I. Upper Roman')),
+                    child: PointerInterceptor(
+                        child: Text(
+                            'I. ${widget.htmlToolbarOptions.i18n.upperRoman}')),
                   ),
                   CustomDropdownMenuItem(
                     value: 'disc',
-                    child: PointerInterceptor(child: Text('• Disc')),
+                    child: PointerInterceptor(
+                        child:
+                            Text('• ${widget.htmlToolbarOptions.i18n.disc}')),
                   ),
                   CustomDropdownMenuItem(
                     value: 'circle',
-                    child: PointerInterceptor(child: Text('○ Circle')),
+                    child: PointerInterceptor(
+                        child:
+                            Text('○ ${widget.htmlToolbarOptions.i18n.circle}')),
                   ),
                   CustomDropdownMenuItem(
                     value: 'square',
-                    child: PointerInterceptor(child: Text('■ Square')),
+                    child: PointerInterceptor(
+                        child:
+                            Text('■ ${widget.htmlToolbarOptions.i18n.square}')),
                   ),
                 ],
-                hint: Text('Select list style'),
+                hint: Text(widget.htmlToolbarOptions.i18n.listStyle),
                 value: _listStyleSelectedItem,
                 onChanged: (String? changed) async {
                   void updateSelectedItem(dynamic changed) {
@@ -1359,16 +1155,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                 updateSelectedItem) ??
                             true;
                     if (proceed) {
-                      if (kIsWeb) {
-                        widget.controller.changeListStyle(changed);
-                      } else {
-                        await widget.controller.editorController!
-                            .evaluateJavascript(source: '''
-                               var \$focusNode = \$(window.getSelection().focusNode);
-                               var \$parentList = \$focusNode.closest("div.note-editable ol, div.note-editable ul");
-                               \$parentList.css("list-style-type", "$changed");
-                            ''');
-                      }
+                      widget.controller.changeListStyle(changed);
                       updateSelectedItem(changed);
                     }
                   }
@@ -1401,13 +1188,15 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
             textStyle: widget.htmlToolbarOptions.textStyle,
             onPressed: (int index) async {
               void updateStatus() {
-                _alignSelected = List<bool>.filled(t.getIcons1().length, false);
                 setState(mounted, this.setState, () {
-                  _alignSelected[index] = !_alignSelected[index];
+                  _alignSelected =
+                      List<bool>.filled(_alignSelected.length, false);
+                  _alignSelected[index] = true;
                 });
               }
 
-              if (t.getIcons1()[index].icon == Icons.format_align_left) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_align_left) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.alignLeft, _alignSelected[index],
                             updateStatus) ??
@@ -1417,7 +1206,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.format_align_center) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_align_center) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.alignCenter, _alignSelected[index],
                             updateStatus) ??
@@ -1427,7 +1217,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.format_align_right) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_align_right) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.alignRight, _alignSelected[index],
                             updateStatus) ??
@@ -1437,7 +1228,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.format_align_justify) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_align_justify) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.alignJustify, _alignSelected[index],
                             updateStatus) ??
@@ -1449,7 +1241,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
               }
             },
             isSelected: _alignSelected,
-            children: t.getIcons1(),
+            children: t.getIcons1(widget.htmlToolbarOptions.i18n),
           ));
         }
         if (t.increaseIndent || t.decreaseIndent) {
@@ -1473,7 +1265,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
             renderBorder: widget.htmlToolbarOptions.renderBorder,
             textStyle: widget.htmlToolbarOptions.textStyle,
             onPressed: (int index) async {
-              if (t.getIcons2()[index].icon == Icons.format_indent_increase) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_indent_increase) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.increaseIndent, null, null) ??
                     true;
@@ -1481,7 +1274,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   widget.controller.execCommand('indent');
                 }
               }
-              if (t.getIcons2()[index].icon == Icons.format_indent_decrease) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.format_indent_decrease) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.decreaseIndent, null, null) ??
                     true;
@@ -1490,8 +1284,72 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 }
               }
             },
-            isSelected: List<bool>.filled(t.getIcons2().length, false),
-            children: t.getIcons2(),
+            isSelected: List<bool>.filled(
+                t.getIcons2(widget.htmlToolbarOptions.i18n).length, false),
+            children: t.getIcons2(widget.htmlToolbarOptions.i18n),
+          ));
+        }
+        if (t.textDirection) {
+          toolbarChildren.add(ToggleButtons(
+            constraints: BoxConstraints.tightFor(
+              width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
+              height: widget.htmlToolbarOptions.toolbarItemHeight - 2,
+            ),
+            color: widget.htmlToolbarOptions.buttonColor,
+            selectedColor: widget.htmlToolbarOptions.buttonSelectedColor,
+            fillColor: widget.htmlToolbarOptions.buttonFillColor,
+            focusColor: widget.htmlToolbarOptions.buttonFocusColor,
+            highlightColor: widget.htmlToolbarOptions.buttonHighlightColor,
+            hoverColor: widget.htmlToolbarOptions.buttonHoverColor,
+            splashColor: widget.htmlToolbarOptions.buttonSplashColor,
+            selectedBorderColor:
+                widget.htmlToolbarOptions.buttonSelectedBorderColor,
+            borderColor: widget.htmlToolbarOptions.buttonBorderColor,
+            borderRadius: widget.htmlToolbarOptions.buttonBorderRadius,
+            borderWidth: widget.htmlToolbarOptions.buttonBorderWidth,
+            renderBorder: widget.htmlToolbarOptions.renderBorder,
+            textStyle: widget.htmlToolbarOptions.textStyle,
+            onPressed: (int index) async {
+              void updateStatus() {
+                setState(mounted, this.setState, () {
+                  _textDirectionSelected =
+                      List<bool>.filled(_textDirectionSelected.length, false);
+                  _textDirectionSelected[index] = true;
+                });
+              }
+
+              if (index == 0) {
+                var proceed = await widget.htmlToolbarOptions.onButtonPressed
+                        ?.call(ButtonType.ltr, _textDirectionSelected[index],
+                            updateStatus) ??
+                    true;
+                if (proceed) {
+                  widget.controller.changeTextDirection('ltr');
+                  updateStatus();
+                }
+              }
+              if (index == 1) {
+                var proceed = await widget.htmlToolbarOptions.onButtonPressed
+                        ?.call(ButtonType.rtl, _textDirectionSelected[index],
+                            updateStatus) ??
+                    true;
+                if (proceed) {
+                  widget.controller.changeTextDirection('rtl');
+                  updateStatus();
+                }
+              }
+            },
+            isSelected: _textDirectionSelected,
+            children: [
+              Icon(
+                Icons.format_textdirection_l_to_r,
+                semanticLabel: widget.htmlToolbarOptions.i18n.ltr,
+              ),
+              Icon(
+                Icons.format_textdirection_r_to_l,
+                semanticLabel: widget.htmlToolbarOptions.i18n.rtl,
+              ),
+            ],
           ));
         }
         if (t.lineHeight) {
@@ -1530,7 +1388,9 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 style: widget.htmlToolbarOptions.textStyle,
                 items: [
                   CustomDropdownMenuItem(
-                      value: 1, child: PointerInterceptor(child: Text('1.0'))),
+                    value: 1,
+                    child: PointerInterceptor(child: Text('1.0')),
+                  ),
                   CustomDropdownMenuItem(
                     value: 1.2,
                     child: PointerInterceptor(child: Text('1.2')),
@@ -1556,8 +1416,11 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                     child: PointerInterceptor(child: Text('2.0')),
                   ),
                   CustomDropdownMenuItem(
-                      value: 3, child: PointerInterceptor(child: Text('3.0'))),
+                    value: 3,
+                    child: PointerInterceptor(child: Text('3.0')),
+                  ),
                 ],
+                hint: Text(widget.htmlToolbarOptions.i18n.lineHeight),
                 value: _lineHeightSelectedItem,
                 onChanged: (double? changed) async {
                   void updateSelectedItem(dynamic changed) {
@@ -1576,78 +1439,13 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                                 updateSelectedItem) ??
                             true;
                     if (proceed) {
-                      if (kIsWeb) {
-                        widget.controller.changeLineHeight(changed.toString());
-                      } else {
-                        await widget.controller.editorController!
-                            .evaluateJavascript(
-                                source:
-                                    "\$('#summernote-2').summernote('lineHeight', '$changed');");
-                      }
+                      widget.controller.changeLineHeight(changed.toString());
                       updateSelectedItem(changed);
                     }
                   }
                 },
               ),
             ),
-          ));
-        }
-        if (t.textDirection) {
-          toolbarChildren.add(ToggleButtons(
-            constraints: BoxConstraints.tightFor(
-              width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
-              height: widget.htmlToolbarOptions.toolbarItemHeight - 2,
-            ),
-            color: widget.htmlToolbarOptions.buttonColor,
-            selectedColor: widget.htmlToolbarOptions.buttonSelectedColor,
-            fillColor: widget.htmlToolbarOptions.buttonFillColor,
-            focusColor: widget.htmlToolbarOptions.buttonFocusColor,
-            highlightColor: widget.htmlToolbarOptions.buttonHighlightColor,
-            hoverColor: widget.htmlToolbarOptions.buttonHoverColor,
-            splashColor: widget.htmlToolbarOptions.buttonSplashColor,
-            selectedBorderColor:
-                widget.htmlToolbarOptions.buttonSelectedBorderColor,
-            borderColor: widget.htmlToolbarOptions.buttonBorderColor,
-            borderRadius: widget.htmlToolbarOptions.buttonBorderRadius,
-            borderWidth: widget.htmlToolbarOptions.buttonBorderWidth,
-            renderBorder: widget.htmlToolbarOptions.renderBorder,
-            textStyle: widget.htmlToolbarOptions.textStyle,
-            onPressed: (int index) async {
-              void updateStatus() {
-                _textDirectionSelected = List<bool>.filled(2, false);
-                setState(mounted, this.setState, () {
-                  _textDirectionSelected[index] =
-                      !_textDirectionSelected[index];
-                });
-              }
-
-              var proceed = await widget.htmlToolbarOptions.onButtonPressed
-                      ?.call(index == 0 ? ButtonType.ltr : ButtonType.rtl,
-                          _alignSelected[index], updateStatus) ??
-                  true;
-              if (proceed) {
-                if (kIsWeb) {
-                  widget.controller
-                      .changeTextDirection(index == 0 ? 'ltr' : 'rtl');
-                } else {
-                  await widget.controller.editorController!
-                      .evaluateJavascript(source: """
-                  var s=document.getSelection();			
-                  if(s==''){
-                      document.execCommand("insertHTML", false, "<p dir='${index == 0 ? "ltr" : "rtl"}'></p>");
-                  }else{
-                      document.execCommand("insertHTML", false, "<div dir='${index == 0 ? "ltr" : "rtl"}'>"+ document.getSelection()+"</div>");
-                  }
-                """);
-                }
-                updateStatus();
-              }
-            },
-            isSelected: _textDirectionSelected,
-            children: [
-              Icon(Icons.format_textdirection_l_to_r),
-              Icon(Icons.format_textdirection_r_to_l),
-            ],
           ));
         }
         if (t.caseConverter) {
@@ -1686,24 +1484,28 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 style: widget.htmlToolbarOptions.textStyle,
                 items: [
                   CustomDropdownMenuItem(
-                    value: 'lower',
-                    child: PointerInterceptor(child: Text('lowercase')),
+                    value: 'lowerCase',
+                    child: PointerInterceptor(
+                        child: Text(widget.htmlToolbarOptions.i18n.lowercase)),
                   ),
                   CustomDropdownMenuItem(
-                    value: 'sentence',
-                    child: PointerInterceptor(child: Text('Sentence case')),
+                    value: 'sentenceCase',
+                    child: PointerInterceptor(
+                        child:
+                            Text(widget.htmlToolbarOptions.i18n.sentenceCase)),
                   ),
                   CustomDropdownMenuItem(
-                    value: 'title',
-                    child: PointerInterceptor(child: Text('Title Case')),
+                    value: 'titleCase',
+                    child: PointerInterceptor(
+                        child: Text(widget.htmlToolbarOptions.i18n.titleCase)),
                   ),
                   CustomDropdownMenuItem(
-                    value: 'upper',
-                    child: PointerInterceptor(child: Text('UPPERCASE')),
+                    value: 'upperCase',
+                    child: PointerInterceptor(
+                        child: Text(widget.htmlToolbarOptions.i18n.uppercase)),
                   ),
                 ],
-                hint: Text('Change case'),
-                value: null,
+                hint: Text(widget.htmlToolbarOptions.i18n.caseConverter),
                 onChanged: (String? changed) async {
                   if (changed != null) {
                     var proceed = await widget
@@ -1711,38 +1513,14 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                             ?.call(DropdownType.caseConverter, changed, null) ??
                         true;
                     if (proceed) {
-                      if (kIsWeb) {
-                        widget.controller.changeCase(changed);
-                      } else {
-                        await widget.controller.editorController!
-                            .evaluateJavascript(source: """
-                          var selected = \$('#summernote-2').summernote('createRange');
-                          if(selected.toString()){
-                              var texto;
-                              var count = 0;
-                              var value = "$changed";
-                              var nodes = selected.nodes();
-                              for (var i=0; i< nodes.length; ++i) {
-                                  if (nodes[i].nodeName == "#text") {
-                                      count++;
-                                      texto = nodes[i].nodeValue.toLowerCase();
-                                      nodes[i].nodeValue = texto;
-                                      if (value == 'upper') {
-                                         nodes[i].nodeValue = texto.toUpperCase();
-                                      }
-                                      else if (value == 'sentence' && count==1) {
-                                         nodes[i].nodeValue = texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
-                                      } else if (value == 'title') {
-                                        var sentence = texto.split(" ");
-                                        for(var j = 0; j< sentence.length; j++){
-                                           sentence[j] = sentence[j][0].toUpperCase() + sentence[j].slice(1);
-                                        }
-                                        nodes[i].nodeValue = sentence.join(" ");
-                                      }
-                                  }
-                              }
-                          }
-                        """);
+                      if (changed == 'lowerCase') {
+                        widget.controller.execCommand('toLowerCase');
+                      } else if (changed == 'sentenceCase') {
+                        widget.controller.execCommand('toSentenceCase');
+                      } else if (changed == 'titleCase') {
+                        widget.controller.execCommand('toTitleCase');
+                      } else if (changed == 'upperCase') {
+                        widget.controller.execCommand('toUpperCase');
                       }
                     }
                   }
@@ -1752,14 +1530,7 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
           ));
         }
       }
-      if (t is InsertButtons &&
-          (t.audio ||
-              t.video ||
-              t.otherFile ||
-              t.picture ||
-              t.link ||
-              t.hr ||
-              t.table)) {
+      if (t is InsertButtons) {
         toolbarChildren.add(ToggleButtons(
           constraints: BoxConstraints.tightFor(
             width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
@@ -1780,840 +1551,555 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
           renderBorder: widget.htmlToolbarOptions.renderBorder,
           textStyle: widget.htmlToolbarOptions.textStyle,
           onPressed: (int index) async {
-            if (t.getIcons()[index].icon == Icons.link) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.link) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.link, null, null) ??
                   true;
               if (proceed) {
-                final text = TextEditingController();
-                final url = TextEditingController();
-                final textFocus = FocusNode();
-                final urlFocus = FocusNode();
-                final formKey = GlobalKey<FormState>();
-                var openNewTab = false;
+                var text = TextEditingController();
+                var url = TextEditingController();
+                var isNewWindow = true;
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return PointerInterceptor(
-                        child: StatefulBuilder(builder:
-                            (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Text('Insert Link'),
-                            scrollable: true,
-                            content: Form(
-                              key: formKey,
-                              child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Text to display',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    SizedBox(height: 10),
-                                    TextField(
-                                      controller: text,
-                                      focusNode: textFocus,
-                                      textInputAction: TextInputAction.next,
-                                      decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        hintText: 'Text',
-                                      ),
-                                      onSubmitted: (_) {
-                                        urlFocus.requestFocus();
-                                      },
+                        child: StatefulBuilder(
+                          builder: (BuildContext context,
+                              void Function(void Function()) setState) {
+                            return AlertDialog(
+                              scrollable: true,
+                              title: Text(
+                                  widget.htmlToolbarOptions.i18n.insertLink),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                      widget.htmlToolbarOptions.i18n
+                                          .textToDisplay,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 10),
+                                  TextField(
+                                    controller: text,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
                                     ),
-                                    SizedBox(height: 20),
-                                    Text('URL',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    SizedBox(height: 10),
-                                    TextFormField(
-                                      controller: url,
-                                      focusNode: urlFocus,
-                                      textInputAction: TextInputAction.done,
-                                      decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        hintText: 'URL',
-                                      ),
-                                      validator: (String? value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Please enter a URL!';
-                                        }
-                                        return null;
-                                      },
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(widget.htmlToolbarOptions.i18n.url,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 10),
+                                  TextField(
+                                    controller: url,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
                                     ),
-                                    Row(
-                                      children: <Widget>[
-                                        SizedBox(
-                                          height: 48.0,
-                                          width: 24.0,
-                                          child: Checkbox(
-                                            value: openNewTab,
-                                            activeColor: Color(0xFF827250),
-                                            onChanged: (bool? value) {
-                                              setState(() {
-                                                openNewTab = value!;
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(context)
-                                                  .dialogTheme
-                                                  .backgroundColor,
-                                              padding: EdgeInsets.only(
-                                                  left: 5, right: 5),
-                                              elevation: 0.0),
-                                          onPressed: () {
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Checkbox(
+                                          value: isNewWindow,
+                                          onChanged: (value) {
                                             setState(() {
-                                              openNewTab = !openNewTab;
+                                              isNewWindow = value!;
                                             });
-                                          },
-                                          child: Text('Open in new window',
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.color)),
-                                        ),
-                                      ],
-                                    ),
-                                  ]),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
+                                          }),
+                                      const SizedBox(width: 5),
+                                      Text(widget.htmlToolbarOptions.i18n
+                                          .openInNewWindow),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () async {
-                                  if (formKey.currentState!.validate()) {
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text(
+                                      widget.htmlToolbarOptions.i18n.cancel),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
                                     var proceed = await widget
                                             .htmlToolbarOptions
                                             .linkInsertInterceptor
-                                            ?.call(
-                                                text.text.isEmpty
-                                                    ? url.text
-                                                    : text.text,
-                                                url.text,
-                                                openNewTab) ??
+                                            ?.call(text.text, url.text,
+                                                isNewWindow) ??
                                         true;
                                     if (proceed) {
                                       widget.controller.insertLink(
-                                        text.text.isEmpty
-                                            ? url.text
-                                            : text.text,
-                                        url.text,
-                                        openNewTab,
-                                      );
+                                          text.text, url.text, isNewWindow);
                                     }
                                     Navigator.of(context).pop();
-                                  }
-                                },
-                                child: Text('OK'),
-                              )
-                            ],
-                          );
-                        }),
+                                  },
+                                  child:
+                                      Text(widget.htmlToolbarOptions.i18n.ok),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       );
                     });
               }
             }
-            if (t.getIcons()[index].icon == Icons.image_outlined) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.image_outlined) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.picture, null, null) ??
                   true;
               if (proceed) {
-                final filename = TextEditingController();
-                final url = TextEditingController();
-                final urlFocus = FocusNode();
-                FilePickerResult? result;
-                String? validateFailed;
+                var url = TextEditingController();
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return PointerInterceptor(
-                        child: StatefulBuilder(builder:
-                            (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Text('Insert Image'),
-                            scrollable: true,
-                            content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (widget
-                                      .htmlToolbarOptions.allowImagePicking)
-                                    Text('Select from files',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  if (widget
-                                      .htmlToolbarOptions.allowImagePicking)
-                                    SizedBox(height: 10),
-                                  if (widget
-                                      .htmlToolbarOptions.allowImagePicking)
-                                    TextFormField(
-                                        controller: filename,
-                                        readOnly: true,
-                                        decoration: InputDecoration(
-                                          prefixIcon: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(context)
-                                                        .dialogTheme
-                                                        .backgroundColor,
-                                                padding: EdgeInsets.only(
-                                                    left: 5, right: 5),
-                                                elevation: 0.0),
-                                            onPressed: () async {
-                                              result = await FilePicker.platform
-                                                  .pickFiles(
-                                                type: FileType.image,
-                                                withData: true,
-                                                allowedExtensions: widget
-                                                    .htmlToolbarOptions
-                                                    .imageExtensions,
-                                              );
-                                              if (result?.files.single.name !=
-                                                  null) {
-                                                setState(() {
-                                                  filename.text =
-                                                      result!.files.single.name;
-                                                });
-                                              }
-                                            },
-                                            child: Text('Choose image',
-                                                style: TextStyle(
-                                                    color: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall
-                                                        ?.color)),
-                                          ),
-                                          suffixIcon: result != null
-                                              ? IconButton(
-                                                  icon: Icon(Icons.close),
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      result = null;
-                                                      filename.text = '';
-                                                    });
-                                                  })
-                                              : Container(height: 0, width: 0),
-                                          errorText: validateFailed,
-                                          errorMaxLines: 2,
-                                          border: InputBorder.none,
-                                        )),
-                                  if (widget
-                                      .htmlToolbarOptions.allowImagePicking)
-                                    SizedBox(height: 20),
-                                  if (widget
-                                      .htmlToolbarOptions.allowImagePicking)
-                                    Text('URL',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  if (widget
-                                      .htmlToolbarOptions.allowImagePicking)
-                                    SizedBox(height: 10),
-                                  TextField(
-                                    controller: url,
-                                    focusNode: urlFocus,
-                                    textInputAction: TextInputAction.done,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      hintText: 'URL',
-                                      errorText: validateFailed,
-                                      errorMaxLines: 2,
-                                    ),
-                                  ),
-                                ]),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
+                        child: AlertDialog(
+                          scrollable: true,
+                          title:
+                              Text(widget.htmlToolbarOptions.i18n.insertImage),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.htmlToolbarOptions.allowImagePicking)
+                                Text(
+                                    widget.htmlToolbarOptions.i18n
+                                        .selectFromFiles,
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                              if (widget.htmlToolbarOptions.allowImagePicking)
+                                const SizedBox(height: 10),
+                              if (widget.htmlToolbarOptions.allowImagePicking)
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    var result = await FilePicker.platform
+                                        .pickFiles(
+                                            type: FileType.image,
+                                            allowMultiple: false);
+                                    if (result != null &&
+                                        result.files.isNotEmpty) {
+                                      var proceed = await widget
+                                              .htmlToolbarOptions
+                                              .mediaUploadInterceptor
+                                              ?.call(result.files.first,
+                                                  InsertFileType.image) ??
+                                          true;
+                                      if (proceed) {
+                                        widget.controller.insertHtml(
+                                            "<img src='data:image/${result.files.first.extension};base64,${base64Encode(result.files.first.bytes!)}' />");
+                                      }
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                  child: Text(widget
+                                      .htmlToolbarOptions.i18n.chooseImage),
+                                ),
+                              if (widget.htmlToolbarOptions.allowImagePicking)
+                                const SizedBox(height: 20),
+                              Text(widget.htmlToolbarOptions.i18n.url,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: url,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
                               ),
-                              TextButton(
-                                onPressed: () async {
-                                  if (filename.text.isEmpty &&
-                                      url.text.isEmpty) {
-                                    setState(() {
-                                      validateFailed = widget.htmlToolbarOptions
-                                              .allowImagePicking
-                                          ? 'Please either choose an image or enter an image URL!'
-                                          : 'Please enter an image URL!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      url.text.isNotEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please input either an image or an image URL, not both!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      result?.files.single.bytes != null) {
-                                    var base64Data = base64
-                                        .encode(result!.files.single.bytes!);
-                                    var proceed = await widget
-                                            .htmlToolbarOptions
-                                            .mediaUploadInterceptor
-                                            ?.call(result!.files.single,
-                                                InsertFileType.image) ??
-                                        true;
-                                    if (proceed) {
-                                      widget.controller.insertHtml(
-                                          "<img src='data:image/${result!.files.single.extension};base64,$base64Data' data-filename='${result!.files.single.name}' alt="
-                                          "/>");
-                                    }
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    var proceed = await widget
-                                            .htmlToolbarOptions
-                                            .mediaLinkInsertInterceptor
-                                            ?.call(url.text,
-                                                InsertFileType.image) ??
-                                        true;
-                                    if (proceed) {
-                                      widget.controller
-                                          .insertNetworkImage(url.text);
-                                    }
-                                    Navigator.of(context).pop();
-                                  }
-                                },
-                                child: Text('OK'),
-                              )
                             ],
-                          );
-                        }),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child:
+                                  Text(widget.htmlToolbarOptions.i18n.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                var proceed = await widget.htmlToolbarOptions
+                                        .mediaLinkInsertInterceptor
+                                        ?.call(
+                                            url.text, InsertFileType.image) ??
+                                    true;
+                                if (proceed) {
+                                  widget.controller
+                                      .insertNetworkImage(url.text);
+                                }
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(widget.htmlToolbarOptions.i18n.ok),
+                            ),
+                          ],
+                        ),
                       );
                     });
               }
             }
-            if (t.getIcons()[index].icon == Icons.audiotrack_outlined) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.audiotrack_outlined) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.audio, null, null) ??
                   true;
               if (proceed) {
-                final filename = TextEditingController();
-                final url = TextEditingController();
-                final urlFocus = FocusNode();
-                FilePickerResult? result;
-                String? validateFailed;
+                var url = TextEditingController();
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return PointerInterceptor(
-                        child: StatefulBuilder(builder:
-                            (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Text('Insert Audio'),
-                            scrollable: true,
-                            content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Select from files',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 10),
-                                  TextFormField(
-                                      controller: filename,
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        prefixIcon: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(context)
-                                                  .dialogTheme
-                                                  .backgroundColor,
-                                              padding: EdgeInsets.only(
-                                                  left: 5, right: 5),
-                                              elevation: 0.0),
-                                          onPressed: () async {
-                                            result = await FilePicker.platform
-                                                .pickFiles(
-                                              type: FileType.audio,
-                                              withData: true,
-                                              allowedExtensions: widget
-                                                  .htmlToolbarOptions
-                                                  .audioExtensions,
-                                            );
-                                            if (result?.files.single.name !=
-                                                null) {
-                                              setState(() {
-                                                filename.text =
-                                                    result!.files.single.name;
-                                              });
-                                            }
-                                          },
-                                          child: Text('Choose audio',
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.color)),
-                                        ),
-                                        suffixIcon: result != null
-                                            ? IconButton(
-                                                icon: Icon(Icons.close),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    result = null;
-                                                    filename.text = '';
-                                                  });
-                                                })
-                                            : Container(height: 0, width: 0),
-                                        errorText: validateFailed,
-                                        errorMaxLines: 2,
-                                        border: InputBorder.none,
-                                      )),
-                                  SizedBox(height: 20),
-                                  Text('URL',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 10),
-                                  TextField(
-                                    controller: url,
-                                    focusNode: urlFocus,
-                                    textInputAction: TextInputAction.done,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      hintText: 'URL',
-                                      errorText: validateFailed,
-                                      errorMaxLines: 2,
-                                    ),
-                                  ),
-                                ]),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
+                        child: AlertDialog(
+                          scrollable: true,
+                          title:
+                              Text(widget.htmlToolbarOptions.i18n.insertAudio),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  widget
+                                      .htmlToolbarOptions.i18n.selectFromFiles,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
                                 onPressed: () async {
-                                  if (filename.text.isEmpty &&
-                                      url.text.isEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please either choose an audio file or enter an audio file URL!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      url.text.isNotEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please input either an audio file or an audio URL, not both!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      result?.files.single.bytes != null) {
-                                    var base64Data = base64
-                                        .encode(result!.files.single.bytes!);
+                                  var result = await FilePicker.platform
+                                      .pickFiles(
+                                          type: FileType.audio,
+                                          allowMultiple: false);
+                                  if (result != null &&
+                                      result.files.isNotEmpty) {
                                     var proceed = await widget
                                             .htmlToolbarOptions
                                             .mediaUploadInterceptor
-                                            ?.call(result!.files.single,
+                                            ?.call(result.files.first,
                                                 InsertFileType.audio) ??
                                         true;
                                     if (proceed) {
                                       widget.controller.insertHtml(
-                                          "<audio controls src='data:audio/${result!.files.single.extension};base64,$base64Data' data-filename='${result!.files.single.name}'></audio>");
-                                    }
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    var proceed = await widget
-                                            .htmlToolbarOptions
-                                            .mediaLinkInsertInterceptor
-                                            ?.call(url.text,
-                                                InsertFileType.audio) ??
-                                        true;
-                                    if (proceed) {
-                                      widget.controller.insertHtml(
-                                          "<audio controls src='${url.text}'></audio>");
+                                          "<audio controls src='data:audio/${result.files.first.extension};base64,${base64Encode(result.files.first.bytes!)}'></audio>");
                                     }
                                     Navigator.of(context).pop();
                                   }
                                 },
-                                child: Text('OK'),
-                              )
+                                child: Text(
+                                    widget.htmlToolbarOptions.i18n.chooseAudio),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(widget.htmlToolbarOptions.i18n.url,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: url,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
                             ],
-                          );
-                        }),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child:
+                                  Text(widget.htmlToolbarOptions.i18n.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                var proceed = await widget.htmlToolbarOptions
+                                        .mediaLinkInsertInterceptor
+                                        ?.call(
+                                            url.text, InsertFileType.audio) ??
+                                    true;
+                                if (proceed) {
+                                  widget.controller.insertHtml(
+                                      "<audio controls src='${url.text}'></audio>");
+                                }
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(widget.htmlToolbarOptions.i18n.ok),
+                            ),
+                          ],
+                        ),
                       );
                     });
               }
             }
-            if (t.getIcons()[index].icon == Icons.videocam_outlined) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.videocam_outlined) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.video, null, null) ??
                   true;
               if (proceed) {
-                final filename = TextEditingController();
-                final url = TextEditingController();
-                final urlFocus = FocusNode();
-                FilePickerResult? result;
-                String? validateFailed;
+                var url = TextEditingController();
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return PointerInterceptor(
-                        child: StatefulBuilder(builder:
-                            (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Text('Insert Video'),
-                            scrollable: true,
-                            content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Select from files',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 10),
-                                  TextFormField(
-                                      controller: filename,
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        prefixIcon: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(context)
-                                                  .dialogTheme
-                                                  .backgroundColor,
-                                              padding: EdgeInsets.only(
-                                                  left: 5, right: 5),
-                                              elevation: 0.0),
-                                          onPressed: () async {
-                                            result = await FilePicker.platform
-                                                .pickFiles(
-                                              type: FileType.video,
-                                              withData: true,
-                                              allowedExtensions: widget
-                                                  .htmlToolbarOptions
-                                                  .videoExtensions,
-                                            );
-                                            if (result?.files.single.name !=
-                                                null) {
-                                              setState(() {
-                                                filename.text =
-                                                    result!.files.single.name;
-                                              });
-                                            }
-                                          },
-                                          child: Text('Choose video',
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.color)),
-                                        ),
-                                        suffixIcon: result != null
-                                            ? IconButton(
-                                                icon: Icon(Icons.close),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    result = null;
-                                                    filename.text = '';
-                                                  });
-                                                })
-                                            : Container(height: 0, width: 0),
-                                        errorText: validateFailed,
-                                        errorMaxLines: 2,
-                                        border: InputBorder.none,
-                                      )),
-                                  SizedBox(height: 20),
-                                  Text('URL',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 10),
-                                  TextField(
-                                    controller: url,
-                                    focusNode: urlFocus,
-                                    textInputAction: TextInputAction.done,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      hintText: 'URL',
-                                      errorText: validateFailed,
-                                      errorMaxLines: 2,
-                                    ),
-                                  ),
-                                ]),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
+                        child: AlertDialog(
+                          scrollable: true,
+                          title:
+                              Text(widget.htmlToolbarOptions.i18n.insertVideo),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  widget
+                                      .htmlToolbarOptions.i18n.selectFromFiles,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
                                 onPressed: () async {
-                                  if (filename.text.isEmpty &&
-                                      url.text.isEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please either choose a video or enter a video URL!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      url.text.isNotEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please input either a video or a video URL, not both!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      result?.files.single.bytes != null) {
-                                    var base64Data = base64
-                                        .encode(result!.files.single.bytes!);
+                                  var result = await FilePicker.platform
+                                      .pickFiles(
+                                          type: FileType.video,
+                                          allowMultiple: false);
+                                  if (result != null &&
+                                      result.files.isNotEmpty) {
                                     var proceed = await widget
                                             .htmlToolbarOptions
                                             .mediaUploadInterceptor
-                                            ?.call(result!.files.single,
+                                            ?.call(result.files.first,
                                                 InsertFileType.video) ??
                                         true;
                                     if (proceed) {
                                       widget.controller.insertHtml(
-                                          "<video controls src='data:video/${result!.files.single.extension};base64,$base64Data' data-filename='${result!.files.single.name}'></video>");
-                                    }
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    var proceed = await widget
-                                            .htmlToolbarOptions
-                                            .mediaLinkInsertInterceptor
-                                            ?.call(url.text,
-                                                InsertFileType.video) ??
-                                        true;
-                                    if (proceed) {
-                                      widget.controller.insertHtml(
-                                          "<video controls src='${url.text}'></video>");
+                                          "<video controls src='data:video/${result.files.first.extension};base64,${base64Encode(result.files.first.bytes!)}'></video>");
                                     }
                                     Navigator.of(context).pop();
                                   }
                                 },
-                                child: Text('OK'),
-                              )
+                                child: Text(
+                                    widget.htmlToolbarOptions.i18n.chooseVideo),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(widget.htmlToolbarOptions.i18n.url,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: url,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
                             ],
-                          );
-                        }),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child:
+                                  Text(widget.htmlToolbarOptions.i18n.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                var proceed = await widget.htmlToolbarOptions
+                                        .mediaLinkInsertInterceptor
+                                        ?.call(
+                                            url.text, InsertFileType.video) ??
+                                    true;
+                                if (proceed) {
+                                  widget.controller.insertHtml(
+                                      "<video controls src='${url.text}'></video>");
+                                }
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(widget.htmlToolbarOptions.i18n.ok),
+                            ),
+                          ],
+                        ),
                       );
                     });
               }
             }
-            if (t.getIcons()[index].icon == Icons.attach_file) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.attach_file) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.otherFile, null, null) ??
                   true;
               if (proceed) {
-                final filename = TextEditingController();
-                final url = TextEditingController();
-                final urlFocus = FocusNode();
-                FilePickerResult? result;
-                String? validateFailed;
+                var url = TextEditingController();
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return PointerInterceptor(
-                        child: StatefulBuilder(builder:
-                            (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Text('Insert File'),
-                            scrollable: true,
-                            content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Select from files',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 10),
-                                  TextFormField(
-                                      controller: filename,
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        prefixIcon: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(context)
-                                                  .dialogTheme
-                                                  .backgroundColor,
-                                              padding: EdgeInsets.only(
-                                                  left: 5, right: 5),
-                                              elevation: 0.0),
-                                          onPressed: () async {
-                                            result = await FilePicker.platform
-                                                .pickFiles(
-                                              type: FileType.any,
-                                              withData: true,
-                                              allowedExtensions: widget
-                                                  .htmlToolbarOptions
-                                                  .otherFileExtensions,
-                                            );
-                                            if (result?.files.single.name !=
-                                                null) {
-                                              setState(() {
-                                                filename.text =
-                                                    result!.files.single.name;
-                                              });
-                                            }
-                                          },
-                                          child: Text('Choose file',
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.color)),
-                                        ),
-                                        suffixIcon: result != null
-                                            ? IconButton(
-                                                icon: Icon(Icons.close),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    result = null;
-                                                    filename.text = '';
-                                                  });
-                                                })
-                                            : Container(height: 0, width: 0),
-                                        errorText: validateFailed,
-                                        errorMaxLines: 2,
-                                        border: InputBorder.none,
-                                      )),
-                                  SizedBox(height: 20),
-                                  Text('URL',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 10),
-                                  TextField(
-                                    controller: url,
-                                    focusNode: urlFocus,
-                                    textInputAction: TextInputAction.done,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      hintText: 'URL',
-                                      errorText: validateFailed,
-                                      errorMaxLines: 2,
-                                    ),
-                                  ),
-                                ]),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  if (filename.text.isEmpty &&
-                                      url.text.isEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please either choose a file or enter a file URL!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      url.text.isNotEmpty) {
-                                    setState(() {
-                                      validateFailed =
-                                          'Please input either a file or a file URL, not both!';
-                                    });
-                                  } else if (filename.text.isNotEmpty &&
-                                      result?.files.single.bytes != null) {
+                        child: AlertDialog(
+                          scrollable: true,
+                          title:
+                              Text(widget.htmlToolbarOptions.i18n.insertFile),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  widget
+                                      .htmlToolbarOptions.i18n.selectFromFiles,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  var result = await FilePicker.platform
+                                      .pickFiles(allowMultiple: false);
+                                  if (result != null &&
+                                      result.files.isNotEmpty) {
                                     widget.htmlToolbarOptions.onOtherFileUpload
-                                        ?.call(result!.files.single);
-                                    Navigator.of(context).pop();
-                                  } else {
-                                    widget.htmlToolbarOptions
-                                        .onOtherFileLinkInsert
-                                        ?.call(url.text);
+                                        ?.call(result.files.first);
                                     Navigator.of(context).pop();
                                   }
                                 },
-                                child: Text('OK'),
-                              )
+                                child: Text(
+                                    widget.htmlToolbarOptions.i18n.chooseFile),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(widget.htmlToolbarOptions.i18n.url,
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: url,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
                             ],
-                          );
-                        }),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child:
+                                  Text(widget.htmlToolbarOptions.i18n.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                widget.htmlToolbarOptions.onOtherFileLinkInsert
+                                    ?.call(url.text);
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(widget.htmlToolbarOptions.i18n.ok),
+                            ),
+                          ],
+                        ),
                       );
                     });
               }
             }
-            if (t.getIcons()[index].icon == Icons.table_chart_outlined) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.table_chart_outlined) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.table, null, null) ??
                   true;
               if (proceed) {
-                var currentRows = 1;
-                var currentCols = 1;
+                var rows = 2;
+                var cols = 2;
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return PointerInterceptor(
-                        child: StatefulBuilder(builder:
-                            (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Text('Insert Table'),
-                            scrollable: true,
-                            content: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
+                        child: StatefulBuilder(
+                          builder: (BuildContext context,
+                              void Function(void Function()) setState) {
+                            return AlertDialog(
+                              scrollable: true,
+                              title: Text(
+                                  widget.htmlToolbarOptions.i18n.insertTable),
+                              content: Row(
                                 children: [
-                                  NumberPicker(
-                                    value: currentRows,
-                                    minValue: 1,
-                                    maxValue: 10,
-                                    onChanged: (value) =>
-                                        setState(() => currentRows = value),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(widget.htmlToolbarOptions.i18n.rows),
+                                      NumberPicker(
+                                        value: rows,
+                                        minValue: 1,
+                                        maxValue: 10,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            rows = value;
+                                          });
+                                        },
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(width: 20),
                                   Text('x'),
-                                  NumberPicker(
-                                    value: currentCols,
-                                    minValue: 1,
-                                    maxValue: 10,
-                                    onChanged: (value) =>
-                                        setState(() => currentCols = value),
+                                  const SizedBox(width: 20),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(widget
+                                          .htmlToolbarOptions.i18n.columns),
+                                      NumberPicker(
+                                        value: cols,
+                                        minValue: 1,
+                                        maxValue: 10,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            cols = value;
+                                          });
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                ]),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Cancel'),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () async {
-                                  if (kIsWeb) {
-                                    widget.controller.insertTable(
-                                        '${currentRows}x$currentCols');
-                                  } else {
-                                    await widget.controller.editorController!
-                                        .evaluateJavascript(
-                                            source:
-                                                "\$('#summernote-2').summernote('insertTable', '${currentRows}x$currentCols');");
-                                  }
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('OK'),
-                              )
-                            ],
-                          );
-                        }),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text(
+                                      widget.htmlToolbarOptions.i18n.cancel),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    widget.controller
+                                        .insertTable('${cols}x$rows');
+                                    Navigator.of(context).pop();
+                                  },
+                                  child:
+                                      Text(widget.htmlToolbarOptions.i18n.ok),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       );
                     });
               }
             }
-            if (t.getIcons()[index].icon == Icons.horizontal_rule) {
+            if (t.getIcons(widget.htmlToolbarOptions.i18n)[index].icon ==
+                Icons.horizontal_rule) {
               var proceed = await widget.htmlToolbarOptions.onButtonPressed
                       ?.call(ButtonType.hr, null, null) ??
                   true;
               if (proceed) {
-                widget.controller.insertHtml('<hr/>');
+                widget.controller.execCommand('insertHorizontalRule');
               }
             }
           },
-          isSelected: List<bool>.filled(t.getIcons().length, false),
-          children: t.getIcons(),
+          isSelected: List<bool>.filled(
+              t.getIcons(widget.htmlToolbarOptions.i18n).length, false),
+          children: t.getIcons(widget.htmlToolbarOptions.i18n),
         ));
       }
       if (t is OtherButtons) {
-        if (t.fullscreen || t.codeview || t.undo || t.redo || t.help) {
+        if (t.getIcons1(widget.htmlToolbarOptions.i18n).isNotEmpty) {
           toolbarChildren.add(ToggleButtons(
             constraints: BoxConstraints.tightFor(
               width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
@@ -2640,17 +2126,19 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                 });
               }
 
-              if (t.getIcons1()[index].icon == Icons.fullscreen) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.fullscreen) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.fullscreen, _miscSelected[index],
                             updateStatus) ??
                     true;
                 if (proceed) {
-                  widget.controller.setFullScreen();
+                  widget.controller.toggleFullScreen();
                   updateStatus();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.code) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.code) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.codeview, _miscSelected[index],
                             updateStatus) ??
@@ -2660,7 +2148,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   updateStatus();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.undo) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.undo) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.undo, null, null) ??
                     true;
@@ -2668,7 +2157,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   widget.controller.undo();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.redo) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.redo) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.redo, null, null) ??
                     true;
@@ -2676,7 +2166,8 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                   widget.controller.redo();
                 }
               }
-              if (t.getIcons1()[index].icon == Icons.help_outline) {
+              if (t.getIcons1(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.help_outline) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.help, null, null) ??
                     true;
@@ -2685,248 +2176,72 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
                       context: context,
                       builder: (BuildContext context) {
                         return PointerInterceptor(
-                          child: StatefulBuilder(builder:
-                              (BuildContext context, StateSetter setState) {
-                            return AlertDialog(
-                              title: Text('Help'),
-                              scrollable: true,
-                              content: Container(
-                                height: MediaQuery.of(context).size.height / 2,
-                                child: SingleChildScrollView(
-                                  child: DataTable(
-                                    columnSpacing: 5,
-                                    dataRowMinHeight: 75,
-                                    columns: const <DataColumn>[
+                          child: AlertDialog(
+                            title:
+                                Text(widget.htmlToolbarOptions.i18n.helpTitle),
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  DataTable(
+                                    columns: [
                                       DataColumn(
-                                        label: Text(
-                                          'Key Combination',
-                                          style: TextStyle(
-                                              fontStyle: FontStyle.italic),
-                                        ),
-                                      ),
+                                          label: Text(widget.htmlToolbarOptions
+                                              .i18n.helpAction)),
                                       DataColumn(
-                                        label: Text(
-                                          'Action',
-                                          style: TextStyle(
-                                              fontStyle: FontStyle.italic),
-                                        ),
-                                      ),
+                                          label: Text(widget.htmlToolbarOptions
+                                              .i18n.helpShortcut)),
                                     ],
-                                    rows: const <DataRow>[
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('ESC')),
-                                          DataCell(Text('Escape')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('ENTER')),
-                                          DataCell(Text('Insert Paragraph')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+Z')),
-                                          DataCell(
-                                              Text('Undo the last command')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+Z')),
-                                          DataCell(
-                                              Text('Undo the last command')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+Y')),
-                                          DataCell(
-                                              Text('Redo the last command')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('TAB')),
-                                          DataCell(Text('Tab')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('SHIFT+TAB')),
-                                          DataCell(Text('Untab')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+B')),
-                                          DataCell(Text('Set a bold style')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+I')),
-                                          DataCell(Text('Set an italic style')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+U')),
-                                          DataCell(
-                                              Text('Set an underline style')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+S')),
-                                          DataCell(Text(
-                                              'Set a strikethrough style')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+BACKSLASH')),
-                                          DataCell(Text('Clean a style')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+L')),
-                                          DataCell(Text('Set left align')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+E')),
-                                          DataCell(Text('Set center align')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+R')),
-                                          DataCell(Text('Set right align')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+J')),
-                                          DataCell(Text('Set full align')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+NUM7')),
-                                          DataCell(
-                                              Text('Toggle unordered list')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+SHIFT+NUM8')),
-                                          DataCell(Text('Toggle ordered list')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+LEFTBRACKET')),
-                                          DataCell(Text(
-                                              'Outdent on current paragraph')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+RIGHTBRACKET')),
-                                          DataCell(Text(
-                                              'Indent on current paragraph')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM0')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as a paragraph (<p> tag)')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM1')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as H1')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM2')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as H2')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM3')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as H3')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM4')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as H4')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM5')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as H5')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+NUM6')),
-                                          DataCell(Text(
-                                              'Change current block\'s format as H6')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+ENTER')),
-                                          DataCell(
-                                              Text('Insert horizontal rule')),
-                                        ],
-                                      ),
-                                      DataRow(
-                                        cells: <DataCell>[
-                                          DataCell(Text('CTRL+K')),
-                                          DataCell(Text('Show link dialog')),
-                                        ],
-                                      ),
+                                    rows: [
+                                      DataRow(cells: [
+                                        DataCell(Text(widget.htmlToolbarOptions
+                                            .i18n.helpEscape)),
+                                        DataCell(Text('ESC')),
+                                      ]),
+                                      DataRow(cells: [
+                                        DataCell(Text(widget.htmlToolbarOptions
+                                            .i18n.helpInsertParagraph)),
+                                        DataCell(Text('ENTER')),
+                                      ]),
+                                      DataRow(cells: [
+                                        DataCell(Text(widget
+                                            .htmlToolbarOptions.i18n.helpUndo)),
+                                        DataCell(Text('CTRL+Z')),
+                                      ]),
+                                      DataRow(cells: [
+                                        DataCell(Text(widget
+                                            .htmlToolbarOptions.i18n.helpRedo)),
+                                        DataCell(Text('CTRL+Y')),
+                                      ]),
+                                      DataRow(cells: [
+                                        DataCell(Text('TAB')),
+                                        DataCell(Text('TAB')),
+                                      ]),
                                     ],
                                   ),
-                                ),
+                                ],
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () async {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Text('Close'),
-                                )
-                              ],
-                            );
-                          }),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text(widget.htmlToolbarOptions.i18n.ok),
+                              ),
+                            ],
+                          ),
                         );
                       });
                 }
               }
             },
             isSelected: _miscSelected,
-            children: t.getIcons1(),
+            children: t.getIcons1(widget.htmlToolbarOptions.i18n),
           ));
         }
-        if (t.copy || t.paste) {
+        if (t.getIcons2(widget.htmlToolbarOptions.i18n).isNotEmpty) {
           toolbarChildren.add(ToggleButtons(
             constraints: BoxConstraints.tightFor(
               width: widget.htmlToolbarOptions.toolbarItemHeight - 2,
@@ -2947,61 +2262,31 @@ class ToolbarWidgetState extends State<ToolbarWidget> {
             renderBorder: widget.htmlToolbarOptions.renderBorder,
             textStyle: widget.htmlToolbarOptions.textStyle,
             onPressed: (int index) async {
-              if (t.getIcons2()[index].icon == Icons.copy) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.copy) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.copy, null, null) ??
                     true;
                 if (proceed) {
-                  var data = await widget.controller.getText();
-                  await Clipboard.setData(ClipboardData(text: data));
+                  widget.controller.execCommand('copy');
                 }
               }
-              if (t.getIcons2()[index].icon == Icons.paste) {
+              if (t.getIcons2(widget.htmlToolbarOptions.i18n)[index].icon ==
+                  Icons.paste) {
                 var proceed = await widget.htmlToolbarOptions.onButtonPressed
                         ?.call(ButtonType.paste, null, null) ??
                     true;
                 if (proceed) {
-                  var data = await Clipboard.getData(Clipboard.kTextPlain);
-                  if (data != null) {
-                    var text = data.text!;
-                    widget.controller.insertHtml(text);
-                  }
+                  widget.controller.execCommand('paste');
                 }
               }
             },
-            isSelected: List<bool>.filled(t.getIcons2().length, false),
-            children: t.getIcons2(),
+            isSelected: List<bool>.filled(
+                t.getIcons2(widget.htmlToolbarOptions.i18n).length, false),
+            children: t.getIcons2(widget.htmlToolbarOptions.i18n),
           ));
         }
       }
-    }
-    if (widget.htmlToolbarOptions.customToolbarInsertionIndices.isNotEmpty &&
-        widget.htmlToolbarOptions.customToolbarInsertionIndices.length ==
-            widget.htmlToolbarOptions.customToolbarButtons.length) {
-      for (var i = 0;
-          i < widget.htmlToolbarOptions.customToolbarInsertionIndices.length;
-          i++) {
-        if (widget.htmlToolbarOptions.customToolbarInsertionIndices[i] >
-            toolbarChildren.length) {
-          toolbarChildren.insert(toolbarChildren.length,
-              widget.htmlToolbarOptions.customToolbarButtons[i]);
-        } else if (widget.htmlToolbarOptions.customToolbarInsertionIndices[i] <
-            0) {
-          toolbarChildren.insert(
-              0, widget.htmlToolbarOptions.customToolbarButtons[i]);
-        } else {
-          toolbarChildren.insert(
-              widget.htmlToolbarOptions.customToolbarInsertionIndices[i],
-              widget.htmlToolbarOptions.customToolbarButtons[i]);
-        }
-      }
-    } else {
-      toolbarChildren.addAll(widget.htmlToolbarOptions.customToolbarButtons);
-    }
-    if (widget.htmlToolbarOptions.renderSeparatorWidget) {
-      toolbarChildren = intersperse(
-              widget.htmlToolbarOptions.separatorWidget, toolbarChildren)
-          .toList();
     }
     return toolbarChildren;
   }

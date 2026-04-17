@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   html_editor_enhanced:
     # When depending on this package from a real application you should use:
@@ -24,6 +26,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  file_picker: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
