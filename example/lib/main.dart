@@ -28,6 +28,63 @@ class ExampleI18n {
     'plaintext': 'Klartext',
     'remove': 'Entfernen',
   };
+
+  static const Map<String, String> en = {
+    'title': 'Flutter HTML Editor Example',
+    'refresh': 'Refresh',
+    'toggleCodeView': 'Toggle Code View',
+    'hint': 'Your text here...',
+    'undo': 'Undo',
+    'reset': 'Reset',
+    'submit': 'Submit',
+    'redo': 'Redo',
+    'disable': 'Disable',
+    'enable': 'Enable',
+    'insertText': 'Insert Text',
+    'insertHtml': 'Insert HTML',
+    'insertLink': 'Insert Link',
+    'insertNetworkImage': 'Insert Network Image',
+    'info': 'Info',
+    'warning': 'Warning',
+    'success': 'Success',
+    'danger': 'Danger',
+    'plaintext': 'Plaintext',
+    'remove': 'Remove',
+  };
+
+  static const Map<String, String> es = {
+    'title': 'Ejemplo de Flutter HTML Editor',
+    'refresh': 'Actualizar',
+    'toggleCodeView': 'Alternar Vista de Código',
+    'hint': 'Tu texto aquí...',
+    'undo': 'Deshacer',
+    'reset': 'Restablecer',
+    'submit': 'Enviar',
+    'redo': 'Rehacer',
+    'disable': 'Desactivar',
+    'enable': 'Activar',
+    'insertText': 'Insertar Texto',
+    'insertHtml': 'Insertar HTML',
+    'insertLink': 'Insertar Enlace',
+    'insertNetworkImage': 'Insertar Imagen de Red',
+    'info': 'Info',
+    'warning': 'Advertencia',
+    'success': 'Éxito',
+    'danger': 'Peligro',
+    'plaintext': 'Texto plano',
+    'remove': 'Eliminar',
+  };
+
+  static Map<String, String> getTranslations(String langCode) {
+    switch (langCode) {
+      case 'de':
+        return de;
+      case 'es':
+        return es;
+      default:
+        return en;
+    }
+  }
 }
 
 void main() => runApp(HtmlEditorExampleApp());
@@ -40,25 +97,24 @@ class HtmlEditorExampleApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(),
       darkTheme: ThemeData.dark(),
-      locale: const Locale('de', 'DE'),
+      locale: const Locale('en', 'US'),
       supportedLocales: const [
-        Locale('de', 'DE'),
         Locale('en', 'US'),
+        Locale('de', 'DE'),
+        Locale('es', 'ES'),
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: HtmlEditorExample(title: ExampleI18n.de['title']!),
+      home: const HtmlEditorExample(),
     );
   }
 }
 
 class HtmlEditorExample extends StatefulWidget {
-  HtmlEditorExample({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const HtmlEditorExample({Key? key}) : super(key: key);
 
   @override
   _HtmlEditorExampleState createState() => _HtmlEditorExampleState();
@@ -70,6 +126,21 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
 
   @override
   Widget build(BuildContext context) {
+    String currentLang = Localizations.localeOf(context).languageCode;
+    Map<String, String> i18n = ExampleI18n.getTranslations(currentLang);
+    HtmlToolbarI18n toolbarI18n;
+    switch (currentLang) {
+      case 'de':
+        toolbarI18n = HtmlToolbarI18n.de;
+        break;
+      case 'es':
+        toolbarI18n = HtmlToolbarI18n.es;
+        break;
+      default:
+        toolbarI18n = HtmlToolbarI18n.en;
+        break;
+    }
+
     return GestureDetector(
       onTap: () {
         if (!kIsWeb) {
@@ -78,7 +149,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(i18n['title']!),
           elevation: 0,
           actions: [
             IconButton(
@@ -90,7 +161,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   controller.editorController!.reload();
                 }
               },
-              tooltip: ExampleI18n.de['refresh'],
+              tooltip: i18n['refresh'],
             )
           ],
         ),
@@ -105,7 +176,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ),
-          tooltip: ExampleI18n.de['toggleCodeView'],
+          tooltip: i18n['toggleCodeView'],
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -114,14 +185,15 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
               HtmlEditor(
                 controller: controller,
                 htmlEditorOptions: HtmlEditorOptions(
-                  hint: ExampleI18n.de['hint'],
+                  hint: i18n['hint'],
                   shouldEnsureVisible: true,
+                  lang: currentLang,
                   //initialText: "<p>text content initial, if any</p>",
                 ),
                 htmlToolbarOptions: HtmlToolbarOptions(
                   toolbarPosition: ToolbarPosition.aboveEditor, //by default
                   toolbarType: ToolbarType.nativeScrollable, //by default
-                  i18n: HtmlToolbarI18n.de,
+                  i18n: toolbarI18n,
                   onButtonPressed:
                       (ButtonType type, bool? status, Function? updateStatus) {
                     print(
@@ -171,7 +243,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                   // Inject the language into the WebView's HTML DOM
                   controller.editorController!.evaluateJavascript(
                       source:
-                          "document.documentElement.lang = 'de'; document.querySelector('.note-editable').lang = 'de';");
+                          "document.documentElement.lang = '$currentLang'; document.querySelector('.note-editable').lang = '$currentLang';");
                 },
                     //this is commented because it overrides the default Summernote handlers
                     /*onImageLinkInsert: (String? url) {
@@ -236,7 +308,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.undo();
                       },
-                      child: Text(ExampleI18n.de['undo']!,
+                      child: Text(i18n['undo']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -245,7 +317,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.clear();
                       },
-                      child: Text(ExampleI18n.de['reset']!,
+                      child: Text(i18n['reset']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -263,7 +335,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         });
                       },
                       child: Text(
-                        ExampleI18n.de['submit']!,
+                        i18n['submit']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -275,7 +347,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.redo();
                       },
                       child: Text(
-                        ExampleI18n.de['redo']!,
+                        i18n['redo']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -298,7 +370,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.disable();
                       },
-                      child: Text(ExampleI18n.de['disable']!,
+                      child: Text(i18n['disable']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -309,7 +381,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.enable();
                       },
                       child: Text(
-                        ExampleI18n.de['enable']!,
+                        i18n['enable']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -329,7 +401,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                       onPressed: () {
                         controller.insertText('Google');
                       },
-                      child: Text(ExampleI18n.de['insertText']!,
+                      child: Text(i18n['insertText']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -340,7 +412,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.insertHtml(
                             '''<p style="color: blue">Google in blue</p>''');
                       },
-                      child: Text(ExampleI18n.de['insertHtml']!,
+                      child: Text(i18n['insertHtml']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                   ],
@@ -361,7 +433,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             'Google linked', 'https://google.com', true);
                       },
                       child: Text(
-                        ExampleI18n.de['insertLink']!,
+                        i18n['insertLink']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -375,7 +447,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             filename: 'Google network image');
                       },
                       child: Text(
-                        ExampleI18n.de['insertNetworkImage']!,
+                        i18n['insertNetworkImage']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -395,7 +467,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.addNotification(
                             'Info notification', NotificationType.info);
                       },
-                      child: Text(ExampleI18n.de['info']!,
+                      child: Text(i18n['info']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -405,7 +477,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.addNotification(
                             'Warning notification', NotificationType.warning);
                       },
-                      child: Text(ExampleI18n.de['warning']!,
+                      child: Text(i18n['warning']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -417,7 +489,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             'Success notification', NotificationType.success);
                       },
                       child: Text(
-                        ExampleI18n.de['success']!,
+                        i18n['success']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -430,7 +502,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                             'Danger notification', NotificationType.danger);
                       },
                       child: Text(
-                        ExampleI18n.de['danger']!,
+                        i18n['danger']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -450,7 +522,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.addNotification('Plaintext notification',
                             NotificationType.plaintext);
                       },
-                      child: Text(ExampleI18n.de['plaintext']!,
+                      child: Text(i18n['plaintext']!,
                           style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
@@ -461,7 +533,7 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
                         controller.removeNotification();
                       },
                       child: Text(
-                        ExampleI18n.de['remove']!,
+                        i18n['remove']!,
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
