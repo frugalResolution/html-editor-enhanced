@@ -446,7 +446,7 @@ class HtmlToolbarI18n {
     strikethrough: '取り消し線',
     superscript: '上付き文字',
     subscript: '下付き文字',
-    fontColor: 'テキスト色',
+    fontColor: 'テキストカラー',
     highlightColor: '背景色',
     orderedList: '番号付きリスト',
     unorderedList: '箇条書きリスト',
