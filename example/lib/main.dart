@@ -75,12 +75,37 @@ class ExampleI18n {
     'remove': 'Eliminar',
   };
 
+  static const Map<String, String> jp = {
+    'title': 'Flutter HTMLエディタ 例',
+    'refresh': '更新',
+    'toggleCodeView': 'コード表示切替',
+    'hint': 'ここにテキストを入力...',
+    'undo': '元に戻す',
+    'reset': 'リセット',
+    'submit': '送信',
+    'redo': 'やり直し',
+    'disable': '無効化',
+    'enable': '有効化',
+    'insertText': 'テキスト挿入',
+    'insertHtml': 'HTML挿入',
+    'insertLink': 'リンク挿入',
+    'insertNetworkImage': 'ネットワーク画像挿入',
+    'info': '情報',
+    'warning': '警告',
+    'success': '成功',
+    'danger': '危険',
+    'plaintext': 'プレーンテキスト',
+    'remove': '削除',
+  };
+
   static Map<String, String> getTranslations(String langCode) {
     switch (langCode) {
       case 'de':
         return de;
       case 'es':
         return es;
+      case 'ja':
+        return jp;
       default:
         return en;
     }
@@ -102,6 +127,7 @@ class HtmlEditorExampleApp extends StatelessWidget {
         Locale('en', 'US'),
         Locale('de', 'DE'),
         Locale('es', 'ES'),
+        Locale('ja', 'JP'),
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -135,6 +161,9 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
         break;
       case 'es':
         toolbarI18n = HtmlToolbarI18n.es;
+        break;
+      case 'ja':
+        toolbarI18n = HtmlToolbarI18n.jp;
         break;
       default:
         toolbarI18n = HtmlToolbarI18n.en;
