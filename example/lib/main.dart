@@ -122,7 +122,6 @@ class HtmlEditorExampleApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(),
       darkTheme: ThemeData.dark(),
-      locale: const Locale('en', 'US'),
       supportedLocales: const [
         Locale('en', 'US'),
         Locale('de', 'DE'),
