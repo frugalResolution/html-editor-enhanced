@@ -127,7 +127,12 @@ class HtmlEditorOptions {
   /// Default value is false.
   final bool spellCheck;
 
-  /// The lang attribute sets the language of the HTML document.
+  /// Sets the HTML document language attribute (`document.documentElement.lang`).
+  ///
+  /// This is useful for document metadata, accessibility, and spell-check
+  /// context. This does not localize the editor toolbar UI by itself.
+  ///
+  /// For toolbar labels, use [HtmlToolbarOptions.i18n].
   final String? lang;
 }
 
@@ -415,9 +420,10 @@ class HtmlToolbarOptions {
   /// is enabled. Inserting images via URL will still be possible if this is false.
   final bool allowImagePicking;
 
-  /// Localization for the toolbar.
+  /// Localization for the Flutter toolbar and dialog labels.
   ///
   /// The default value is English [HtmlToolbarI18n()].
+  /// This does not change the HTML document `lang` attribute.
   /// For German, use [HtmlToolbarI18n.de].
   final HtmlToolbarI18n i18n;
 }

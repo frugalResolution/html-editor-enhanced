@@ -193,6 +193,7 @@ Parameter | Type | Default | Description
 **hint** | `String` | empty | Placeholder hint text
 **initialText** | `String` | empty | Initial text content for text editor
 **inputType** | `HtmlInputType` | `HtmlInputType.text` | Allows you to set how the virtual keyboard displays for the editor on mobile devices
+**lang** | `String` | `null` | Sets the HTML document language (`<html lang="...">`). This does not localize toolbar labels by itself.
 **mobileContextMenu** | `ContextMenu` | `null` | Customize the context menu when a user selects text in the editor. See docs for `ContextMenu` [here](https://inappwebview.dev/docs/context-menu/basic-usage/)
 **mobileLongPressDuration** | `Duration` | `Duration(milliseconds: 500)` | Set the duration until a long-press is recognized
 **mobileInitialScripts** | `UnmodifiableListView<UserScript>` | `null` | Easily inject scripts to perform actions like changing the background color of the editor. See docs for `UserScript` [here](https://inappwebview.dev/docs/javascript/user-scripts/)
@@ -224,6 +225,15 @@ Parameter | Type | Default | Description
 **toolbarType** | `ToolbarType` | `ToolbarType.nativeScrollable` | Customize how the toolbar is displayed (gridview, scrollable, or expandable)
 **toolbarPosition** | `ToolbarPosition` | `ToolbarPosition.aboveEditor` | Set where the toolbar is displayed (above or below the editor)
 **videoExtensions** | `List<String>` | `null` | Allowed extensions when inserting videos
+**i18n** | `HtmlToolbarI18n` | `HtmlToolbarI18n()` | Localizes Flutter toolbar labels and dialog text. Example: `HtmlToolbarI18n.de`.
+
+#### Localization model
+
+`HtmlEditorOptions.lang` and `HtmlToolbarOptions.i18n` control different parts:
+
+- `HtmlEditorOptions.lang` sets the HTML document language attribute.
+- `HtmlToolbarOptions.i18n` localizes Flutter toolbar labels and dialog text.
+- To align with device locale, set both values from `Localizations.localeOf(context)`.
 
 #### Styling Options
 
@@ -488,6 +498,13 @@ You can use these files from the package to avoid adding more asset files:
 
 See the example HTML file [below](#example-html-for-filepath) for an actual example.
 
+#### `lang`
+
+This option sets `document.documentElement.lang` for the editor document.
+
+Use this for metadata and accessibility context. If you want localized toolbar
+labels, configure `HtmlToolbarOptions.i18n` as well.
+
 #### `shouldEnsureVisible`
 
 Default value: false
@@ -519,6 +536,27 @@ You can view a complete example [below](#example-for-webinitialscripts)
 ### `HtmlToolbarOptions` parameters
 
 This section contains longer descriptions for select parameters in `HtmlToolbarOptions`. For parameters not mentioned here, see the parameters table [above](#parameters---htmltoolbaroptions) for a short description. If you have further questions, please file an issue.
+
+#### `i18n`
+
+This option localizes the Flutter toolbar labels and dialog text.
+
+It does not set the HTML document language attribute. To match device locale,
+you can set both options together:
+
+```dart
+final locale = Localizations.localeOf(context).languageCode;
+
+HtmlEditor(
+  controller: controller,
+  htmlEditorOptions: HtmlEditorOptions(
+    lang: locale,
+  ),
+  htmlToolbarOptions: HtmlToolbarOptions(
+    i18n: locale == 'de' ? HtmlToolbarI18n.de : HtmlToolbarI18n(),
+  ),
+);
+```
 
 #### `customToolbarButtons` and `customToolbarButtonsInsertionIndices`
 
