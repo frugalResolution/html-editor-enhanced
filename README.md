@@ -558,6 +558,84 @@ HtmlEditor(
 );
 ```
 
+#### Add another language
+
+Use this checklist when you add a new locale (for example, French `fr`):
+
+1. Add the locale to iOS metadata in `example/ios/Runner/Info.plist`.
+2. Add the locale to `supportedLocales` in `example/lib/main.dart`.
+3. Add static words for the example app in `ExampleI18n`.
+4. Add static toolbar words in `HtmlToolbarI18n` (`lib/utils/i18n.dart`).
+5. Map the locale code (`fr`, `ja`, etc.) to both i18n models.
+
+`Info.plist`:
+
+```xml
+<key>CFBundleLocalizations</key>
+<array>
+  <string>en</string>
+  <string>de</string>
+  <string>es</string>
+  <string>ja</string>
+  <string>fr</string>
+</array>
+```
+
+`example/lib/main.dart` (`ExampleI18n` + `supportedLocales` + toolbar mapping):
+
+```dart
+class ExampleI18n {
+  static const Map<String, String> fr = {
+    'title': 'Exemple Flutter HTML Editor',
+    'refresh': 'Actualiser',
+    'toggleCodeView': 'Basculer la vue code',
+    // Add the rest of your static words here.
+  };
+
+  static Map<String, String> getTranslations(String langCode) {
+    switch (langCode) {
+      case 'fr':
+        return fr;
+      default:
+        return en;
+    }
+  }
+}
+
+MaterialApp(
+  supportedLocales: const [
+    Locale('en', 'US'),
+    Locale('de', 'DE'),
+    Locale('es', 'ES'),
+    Locale('ja', 'JP'),
+    Locale('fr', 'FR'),
+  ],
+);
+
+switch (currentLang) {
+  case 'fr':
+    toolbarI18n = HtmlToolbarI18n.fr;
+    break;
+  default:
+    toolbarI18n = HtmlToolbarI18n.en;
+}
+```
+
+`lib/utils/i18n.dart` (`HtmlToolbarI18n`):
+
+```dart
+static const HtmlToolbarI18n fr = HtmlToolbarI18n(
+  cancel: 'Annuler',
+  ok: 'OK',
+  reset: 'Reinitialiser',
+  help: 'Aide',
+  done: 'Termine',
+  // Add or override the rest of the toolbar labels as needed.
+);
+```
+
+`HtmlToolbarI18n` fields you do not override fall back to English defaults.
+
 #### `customToolbarButtons` and `customToolbarButtonsInsertionIndices`
 
 These two parameters allow you to insert custom buttons and set where they are inserted into the toolbar widget list.

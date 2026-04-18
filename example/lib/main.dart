@@ -75,6 +75,29 @@ class ExampleI18n {
     'remove': 'Eliminar',
   };
 
+  static const Map<String, String> fr = {
+    'title': 'Exemple Flutter HTML Editor',
+    'refresh': 'Actualiser',
+    'toggleCodeView': 'Basculer la vue code',
+    'hint': 'Votre texte ici...',
+    'undo': 'Annuler',
+    'reset': 'Reinitialiser',
+    'submit': 'Envoyer',
+    'redo': 'Retablir',
+    'disable': 'Desactiver',
+    'enable': 'Activer',
+    'insertText': 'Inserer du texte',
+    'insertHtml': 'Inserer du HTML',
+    'insertLink': 'Inserer un lien',
+    'insertNetworkImage': 'Inserer une image reseau',
+    'info': 'Info',
+    'warning': 'Avertissement',
+    'success': 'Succes',
+    'danger': 'Danger',
+    'plaintext': 'Texte brut',
+    'remove': 'Supprimer',
+  };
+
   static const Map<String, String> jp = {
     'title': 'Flutter HTMLエディタ 例',
     'refresh': '更新',
@@ -104,6 +127,8 @@ class ExampleI18n {
         return de;
       case 'es':
         return es;
+      case 'fr':
+        return fr;
       case 'ja':
         return jp;
       default:
@@ -126,6 +151,7 @@ class HtmlEditorExampleApp extends StatelessWidget {
         Locale('en', 'US'),
         Locale('de', 'DE'),
         Locale('es', 'ES'),
+        Locale('fr', 'FR'),
         Locale('ja', 'JP'),
       ],
       localizationsDelegates: const [
@@ -161,8 +187,11 @@ class _HtmlEditorExampleState extends State<HtmlEditorExample> {
       case 'es':
         toolbarI18n = HtmlToolbarI18n.es;
         break;
+      case 'fr':
+        toolbarI18n = HtmlToolbarI18n.fr;
+        break;
       case 'ja':
-        toolbarI18n = HtmlToolbarI18n.jp;
+        toolbarI18n = HtmlToolbarI18n.ja;
         break;
       default:
         toolbarI18n = HtmlToolbarI18n.en;
